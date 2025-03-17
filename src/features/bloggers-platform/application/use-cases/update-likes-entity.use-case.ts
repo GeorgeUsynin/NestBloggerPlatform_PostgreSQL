@@ -8,7 +8,7 @@ import { Likeable } from '../../domain/shared.entity';
 export class UpdateLikeEntityStatusCommand {
   constructor(
     public readonly entityId: string,
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly dto: UpdateLikeDto,
   ) {}
 }

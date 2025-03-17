@@ -5,12 +5,11 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { ExtractUserFromRequest } from '../guards/decorators/params/ExtractUserFromRequest.decorator';
 import { UserContextDto } from '../guards/dto/user-context.dto';
 import { RefreshTokenContextDto } from '../guards/dto/refresh-token-context.dto';
@@ -53,7 +52,7 @@ import {
 import { ThrottlerGuard, SkipThrottle } from '@nestjs/throttler';
 
 @Controller('auth')
-@UseGuards(ThrottlerGuard)
+// @UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(
     private authQueryRepository: AuthQueryRepository,
@@ -75,22 +74,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @LoginApi()
   async login(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<LoginSuccessViewDto> {
-    const userAgent = request.header('user-agent');
-    const clientIp = request.ip || '';
-
-    const { accessToken, refreshToken } = await this.commandBus.execute<
+    const { accessToken } = await this.commandBus.execute<
       LoginCommand,
       LoginUseCaseResponse
-    >(new LoginCommand(user.id, clientIp, userAgent));
-
-    response.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
-    });
+    >(new LoginCommand(user.id));
 
     return { accessToken };
   }

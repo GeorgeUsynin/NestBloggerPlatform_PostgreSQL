@@ -20,7 +20,7 @@ export class RecoverPasswordUseCase
   ) {}
 
   async execute({ email }: RecoverPasswordCommand) {
-    const user = await this.usersRepository.findUserByEmail(email);
+    const user = await this.usersRepository.findUserByEmailSQL(email);
 
     if (!user) return;
 
@@ -29,9 +29,11 @@ export class RecoverPasswordUseCase
       this.usersConfig.RECOVERY_CODE_EXPIRATION_TIME_IN_HOURS;
     const expirationDate = add(new Date(), { hours: expirationTimeInHours });
 
-    user.setPasswordRecoveryCode(passwordRecoveryCode, expirationDate);
-
-    await this.usersRepository.save(user);
+    await this.usersRepository.updatePasswordRecoverySQL(
+      user.id,
+      passwordRecoveryCode,
+      expirationDate,
+    );
 
     // sent recovery email
     this.eventBus.publish(

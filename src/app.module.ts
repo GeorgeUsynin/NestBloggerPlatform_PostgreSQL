@@ -3,6 +3,7 @@ import { configModule } from './config-module';
 
 import { DynamicModule, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { UsersAccountsModule } from './features/user-accounts/usersAccounts.module';
 import { BloggersPlatformModule } from './features/bloggers-platform/bloggers-platform.module';
@@ -30,6 +31,17 @@ import { CqrsModule } from '@nestjs/cqrs';
         ];
       },
       inject: [CoreConfig],
+    }),
+    // Connect to PostgreSQL
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'nodejs',
+      password: 'nodejs',
+      database: 'BloggersPlatform',
+      autoLoadEntities: false,
+      synchronize: false,
     }),
     // Connect to MongoDB
     MongooseModule.forRootAsync({

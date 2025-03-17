@@ -4,8 +4,8 @@ import { CommentDocument } from '../../../domain/comment.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 class CommentatorInfo {
-  @ApiProperty({ type: String })
-  userId: string;
+  @ApiProperty({ type: Number })
+  userId: number;
 
   @ApiProperty({ type: String })
   userLogin: string;

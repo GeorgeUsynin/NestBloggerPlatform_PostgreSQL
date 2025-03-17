@@ -1,13 +1,14 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { User, UserModelType } from '../../domain/user.entity';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { CryptoService } from '../crypto.service';
 import { CreateUserDto } from '../../domain/dto/create/users.create-dto';
 import { UserAccountsConfig } from '../../config';
 
 export class CreateUserCommand {
-  constructor(public readonly dto: CreateUserDto) {}
+  constructor(
+    public readonly dto: CreateUserDto,
+    public readonly isFromRegistration: boolean,
+  ) {}
 }
 
 @CommandHandler(CreateUserCommand)
@@ -15,30 +16,28 @@ export class CreateUserUseCase
   implements ICommandHandler<CreateUserCommand, string>
 {
   constructor(
-    @InjectModel(User.name)
-    private UserModel: UserModelType,
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
     private usersConfig: UserAccountsConfig,
   ) {}
 
-  async execute({ dto }: CreateUserCommand) {
+  async execute({ dto, isFromRegistration }: CreateUserCommand) {
     const passwordHash = await this.cryptoService.generatePasswordHash(
       dto.password,
     );
 
-    const user = this.UserModel.createUser({
-      email: dto.email,
-      login: dto.login,
+    const userId = await this.usersRepository.createUser({
+      ...dto,
       password: passwordHash,
     });
 
-    if (this.usersConfig.IS_USER_AUTOMATICALLY_CONFIRMED) {
-      user.emailConfirmation.isConfirmed = true;
+    if (
+      !isFromRegistration &&
+      this.usersConfig.IS_USER_AUTOMATICALLY_CONFIRMED
+    ) {
+      await this.usersRepository.updateIsConfirmedByUserId(userId, true);
     }
 
-    await this.usersRepository.save(user);
-
-    return user._id.toString();
+    return userId;
   }
 }

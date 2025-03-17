@@ -7,8 +7,8 @@ class NewestLikesDto {
   @ApiProperty({ type: Date })
   addedAt: string;
 
-  @ApiProperty({ type: String, nullable: true })
-  userId: string;
+  @ApiProperty({ type: Number, nullable: true })
+  userId: number;
 
   @ApiProperty({ type: String, nullable: true })
   login: string;

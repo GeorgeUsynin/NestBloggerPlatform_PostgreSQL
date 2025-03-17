@@ -16,14 +16,17 @@ export class AuthService {
     password: string,
   ): Promise<UserContextDto | null> {
     const user =
-      await this.usersRepository.findUserByLoginOrEmail(loginOrEmail);
+      await this.usersRepository.findUserByLoginOrEmailSQL(loginOrEmail);
 
     if (!user) {
       return null;
     }
 
+    const usersEmailConfirmation =
+      await this.usersRepository.findEmailConfirmationByUserId(user.id);
+
     // check if user's email is confirmed
-    if (!user.emailConfirmation.isConfirmed) {
+    if (!usersEmailConfirmation.isConfirmed) {
       throw UnauthorizedDomainException.create('Email is not confirmed');
     }
 
@@ -36,6 +39,6 @@ export class AuthService {
       return null;
     }
 
-    return { id: user._id.toString() };
+    return { id: user.id };
   }
 }

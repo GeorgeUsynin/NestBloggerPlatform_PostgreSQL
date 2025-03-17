@@ -23,7 +23,7 @@ export class CommentsQueryRepository {
   async getAllCommentsByPostId(
     query: GetCommentsQueryParams,
     postId: string,
-    userId: string | null,
+    userId: number | null,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
     const post = await this.PostModel.findById(postId);
 
@@ -66,7 +66,7 @@ export class CommentsQueryRepository {
 
   async getByIdOrNotFoundFail(
     commentId: string,
-    userId: string | null,
+    userId: number | null,
   ): Promise<CommentViewDto> {
     const comment = await this.CommentModel.findOne({
       _id: commentId,

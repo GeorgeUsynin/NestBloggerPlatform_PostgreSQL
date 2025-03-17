@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 
 type TParams = {
   parentId?: string;
-  userId?: string;
+  userId?: number;
 };
 
 @Injectable()

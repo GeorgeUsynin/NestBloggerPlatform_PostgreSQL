@@ -30,7 +30,7 @@ export class Comment extends Likeable {
     _id: false,
   })
   commentatorInfo: {
-    userId: string;
+    userId: number;
     userLogin: string;
   };
 
@@ -62,7 +62,7 @@ export class Comment extends Likeable {
     this.content = dto.content;
   }
 
-  isCommentOwner(userId: string) {
+  isCommentOwner(userId: number) {
     if (this.commentatorInfo.userId !== userId) {
       throw ForbiddenDomainException.create(
         'You are not allowed to modify this comment',

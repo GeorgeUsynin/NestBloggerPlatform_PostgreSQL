@@ -1,6 +1,6 @@
-import { SchemaTimestampsConfig } from 'mongoose';
 import { UserDocument } from '../../../domain/user.entity';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { DBUser } from '../../../infrastructure/types';
 
 export class UserViewDto {
   @ApiProperty({ type: String })
@@ -13,15 +13,15 @@ export class UserViewDto {
   email: string;
 
   @ApiProperty({ type: Date })
-  createdAt: SchemaTimestampsConfig['createdAt'];
+  createdAt: Date;
 
-  static mapToView(user: UserDocument): UserViewDto {
-    const dto = new UserViewDto();
-
-    dto.email = user.email;
-    dto.login = user.login;
-    dto.id = user._id.toString();
-    dto.createdAt = user.createdAt;
+  static mapToView(user: DBUser): UserViewDto {
+    const dto: UserViewDto = {
+      id: user.id.toString(),
+      email: user.email,
+      login: user.login,
+      createdAt: user.createdAt,
+    };
 
     return dto;
   }
@@ -33,12 +33,12 @@ export class MeViewDto extends OmitType(UserViewDto, [
 ] as const) {
   userId: string;
 
-  static mapToView(user: UserDocument): MeViewDto {
+  static mapToView(user: DBUser): MeViewDto {
     const dto = new MeViewDto();
 
     dto.email = user.email;
     dto.login = user.login;
-    dto.userId = user._id.toString();
+    dto.userId = user.id.toString();
 
     return dto;
   }

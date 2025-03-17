@@ -13,15 +13,29 @@ export class RegistrationConfirmationUseCase
   constructor(private usersRepository: UsersRepository) {}
 
   async execute({ code }: RegistrationConfirmationCommand) {
-    const user =
-      await this.usersRepository.findUserByConfirmationEmailCode(code);
+    const emailConfirmation =
+      await this.usersRepository.findEmailConfirmationByConfirmationCode(code);
 
-    if (!user) {
+    if (!emailConfirmation) {
       throw BadRequestDomainException.create('Invalid code', 'code');
     }
 
-    user.confirmUserEmail(code);
+    if (emailConfirmation.isConfirmed) {
+      throw BadRequestDomainException.create('Email already confirmed', 'code');
+    }
 
-    await this.usersRepository.save(user);
+    if (emailConfirmation.confirmationCode !== code) {
+      throw BadRequestDomainException.create('Invalid code', 'code');
+    }
+
+    if (!emailConfirmation.expirationDate) {
+      throw new Error('Expiration date for email confirmation is not set');
+    }
+
+    if (Date.now() > emailConfirmation.expirationDate.getTime()) {
+      throw BadRequestDomainException.create('Code expired', 'code');
+    }
+
+    await this.usersRepository.updateIsConfirmedByConfirmationCode(code, true);
   }
 }

@@ -20,18 +20,33 @@ export class ChangePasswordUseCase
   ) {}
 
   async execute({ recoveryCode, newPassword }: ChangePasswordCommand) {
-    const user =
-      await this.usersRepository.findUserByRecoveryPasswordCode(recoveryCode);
+    const passwordRecovery =
+      await this.usersRepository.findPasswordRecoveryByRecoveryCode(
+        recoveryCode,
+      );
 
-    if (!user) {
+    if (!passwordRecovery) {
       throw BadRequestDomainException.create('Invalid code', 'recoveryCode');
     }
 
-    const passwordHash =
+    const newPasswordHash =
       await this.cryptoService.generatePasswordHash(newPassword);
 
-    user.changePassword(recoveryCode, passwordHash);
+    if (passwordRecovery.recoveryCode !== recoveryCode) {
+      throw BadRequestDomainException.create('Invalid code', 'code');
+    }
 
-    await this.usersRepository.save(user);
+    if (!passwordRecovery.expirationDate) {
+      throw new Error('Expiration date for email confirmation is not set');
+    }
+
+    if (Date.now() > passwordRecovery.expirationDate.getTime()) {
+      throw BadRequestDomainException.create('Code expired', 'recoveryCode');
+    }
+
+    await this.usersRepository.updateUsersPassword(
+      passwordRecovery.userId,
+      newPasswordHash,
+    );
   }
 }

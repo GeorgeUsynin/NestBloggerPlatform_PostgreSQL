@@ -11,8 +11,8 @@ export enum LikeStatus {
 
 @Schema({ timestamps: true })
 export class Like {
-  @Prop({ type: String, required: true })
-  userId: string;
+  @Prop({ type: Number, required: true })
+  userId: number;
 
   @Prop({ type: String, required: true })
   parentId: string;

@@ -5,7 +5,7 @@ import { UpdateCommentDto } from '../../../domain/dto/update/comments.update-dto
 export class UpdateCommentCommand {
   constructor(
     public readonly commentId: string,
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly dto: UpdateCommentDto,
   ) {}
 }

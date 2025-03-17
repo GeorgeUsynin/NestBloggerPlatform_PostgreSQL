@@ -33,7 +33,7 @@ export class CreateCommentUseCase
 
     const newComment = this.CommentModel.createComment({
       content: dto.content,
-      userId: user._id.toString(),
+      userId: user.id,
       userLogin: user.login,
       postId: dto.postId,
     });

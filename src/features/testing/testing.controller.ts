@@ -13,6 +13,8 @@ import {
   CommentModelType,
 } from '../bloggers-platform/domain/comment.entity';
 import { TestingAllDataApi } from './swagger/testing-all-data.decorator';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Controller('testing')
 export class TestingController {
@@ -29,13 +31,14 @@ export class TestingController {
     private LikeModel: LikeModelType,
     @InjectModel(AuthDeviceSession.name)
     private AuthDeviceSessionModel: AuthDeviceSessionModelType,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   @Delete('all-data')
   @HttpCode(HttpStatus.NO_CONTENT)
   @TestingAllDataApi()
   async deleteAll() {
-    await this.UserModel.deleteMany();
+    await this.dataSource.query(`DELETE FROM "Users"`);
     await this.BlogModel.deleteMany();
     await this.PostModel.deleteMany();
     await this.CommentModel.deleteMany();

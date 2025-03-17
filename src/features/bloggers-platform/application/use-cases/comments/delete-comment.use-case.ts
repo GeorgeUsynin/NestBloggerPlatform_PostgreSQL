@@ -4,7 +4,7 @@ import { CommentsRepository } from '../../../infrastructure/comments.repository'
 export class DeleteCommentCommand {
   constructor(
     public readonly commentId: string,
-    public readonly userId: string,
+    public readonly userId: number,
   ) {}
 }
 

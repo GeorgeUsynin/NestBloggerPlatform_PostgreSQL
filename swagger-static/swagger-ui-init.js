@@ -361,7 +361,7 @@ window.onload = function() {
           ]
         }
       },
-      "/users/{id}": {
+      "/sa/users/{id}": {
         "get": {
           "operationId": "UsersController_getById",
           "parameters": [
@@ -435,7 +435,7 @@ window.onload = function() {
           ]
         }
       },
-      "/users": {
+      "/sa/users": {
         "get": {
           "operationId": "UsersController_getAllUsers",
           "parameters": [
@@ -2093,7 +2093,7 @@ window.onload = function() {
               "type": "string"
             },
             "userId": {
-              "type": "string",
+              "type": "number",
               "nullable": true
             },
             "login": {
@@ -2255,7 +2255,7 @@ window.onload = function() {
           "type": "object",
           "properties": {
             "userId": {
-              "type": "string"
+              "type": "number"
             },
             "userLogin": {
               "type": "string"

@@ -6,8 +6,8 @@ import { UsersRepository } from '../users.repository';
 export class AuthQueryRepository {
   constructor(private usersRepository: UsersRepository) {}
 
-  async me(id: string): Promise<MeViewDto> {
-    const user = await this.usersRepository.findUserByIdOrNotFoundFail(id);
+  async me(id: number): Promise<MeViewDto> {
+    const user = await this.usersRepository.findUserByIdOrNotFoundFailSQL(id);
 
     return MeViewDto.mapToView(user);
   }

@@ -25,13 +25,13 @@ export class JwtHeaderStrategy extends PassportStrategy(
   async validate(payload: JwtHeaderPayloadDto): Promise<UserContextDto> {
     // Checking if user exists
     const isUserExists = Boolean(
-      await this.usersRepository.findUserById(payload.id),
+      await this.usersRepository.findUserByIdSQL(Number(payload.id)),
     );
 
     if (!isUserExists) {
       throw UnauthorizedDomainException.create();
     }
 
-    return { id: payload.id };
+    return { id: Number(payload.id) };
   }
 }

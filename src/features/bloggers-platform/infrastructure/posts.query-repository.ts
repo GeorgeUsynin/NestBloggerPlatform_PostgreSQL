@@ -26,7 +26,7 @@ export class PostsQueryRepository {
 
   async getAllPosts(
     query: GetPostsQueryParams,
-    userId: string | null,
+    userId: number | null,
     blogId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const filter: FilterQuery<Post> = {
@@ -53,7 +53,7 @@ export class PostsQueryRepository {
         myStatus = like ? like.status : LikeStatus.None;
       }
 
-      const newestLikes = await this.getNewestLikes(item._id.toString());
+      const newestLikes = await this.getNewestLikes(item.id);
 
       return PostViewDto.mapToView(item, myStatus, newestLikes);
     });
@@ -68,7 +68,7 @@ export class PostsQueryRepository {
 
   async getAllPostsByBlogId(
     query: GetPostsQueryParams,
-    userId: string | null,
+    userId: number | null,
     blogId: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const blog = await this.BlogModel.findById(blogId);
@@ -82,7 +82,7 @@ export class PostsQueryRepository {
 
   async getByIdOrNotFoundFail(
     id: string,
-    userId: string | null,
+    userId: number | null,
   ): Promise<PostViewDto> {
     const post = await this.PostModel.findOne({
       _id: id,
@@ -136,7 +136,7 @@ export class PostsQueryRepository {
     const users = await this.UserModel.find({ _id: { $in: likesUsersIds } });
 
     const newestLikes = newestLikesRaw.map((like) => {
-      const user = users.find((user) => user._id.toString() === like.userId);
+      const user = users.find((user) => user.id === like.userId);
       return {
         addedAt: like.createdAt as string,
         // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
