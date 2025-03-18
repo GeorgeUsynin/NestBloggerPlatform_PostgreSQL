@@ -33,41 +33,6 @@ export class UsersRepository {
     return user;
   }
 
-  async findUserById(id: string): Promise<UserDocument | null> {
-    return await this.UserModel.findOne({
-      _id: id,
-      deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
-    });
-  }
-
-  async findUserByLoginOrEmail(loginOrEmail: string) {
-    return this.UserModel.findOne({
-      $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
-    });
-  }
-
-  async findUserByLogin(login: string) {
-    return this.UserModel.findOne({ login });
-  }
-
-  async findUserByEmail(email: string) {
-    return this.UserModel.findOne({ email });
-  }
-
-  async findUserByConfirmationEmailCode(code: string) {
-    return this.UserModel.findOne({
-      'emailConfirmation.confirmationCode': code,
-    });
-  }
-
-  async findUserByRecoveryPasswordCode(code: string) {
-    return this.UserModel.findOne({ 'passwordRecovery.recoveryCode': code });
-  }
-
-  async save(user: UserDocument) {
-    await user.save();
-  }
-
   // POSTGRESQL
 
   async findUserByIdSQL(id: number): Promise<DBUser | null> {
@@ -273,13 +238,22 @@ export class UsersRepository {
     code: string,
     expirationDate: Date,
   ) {
+    /**
+     * 1. INSERT пробует вставить новую запись.
+     * 2. ON CONFLICT ("userId") означает, что если userId уже существует, не нужно выбрасывать ошибку.
+     * 3. DO UPDATE SET обновляет recoveryCode и expirationDate, используя EXCLUDED (это ссылка на новые значения, переданные в INSERT).
+     * EXCLUDED — это специальное имя таблицы (псевдотаблица) в PostgreSQL, которое используется в конструкции ON CONFLICT ... DO UPDATE.
+     * Когда происходит конфликт (например, при попытке вставить запись с уже существующим userId), EXCLUDED содержит значения, которые пытались вставить с INSERT, но не прошли из-за конфликта.
+     */
     return this.dataSource.query(
       `
-      UPDATE "PasswordRecoveries"
-	    SET "recoveryCode" = $1, "expirationDate" = $2
-	    WHERE "userId" = $3;      
+      INSERT INTO "PasswordRecoveries" ("userId", "recoveryCode", "expirationDate")
+      VALUES ($1, $2, $3)
+      ON CONFLICT ("userId") 
+      DO UPDATE SET "recoveryCode" = EXCLUDED."recoveryCode",
+                    "expirationDate" = EXCLUDED."expirationDate";
       `,
-      [code, expirationDate, userId],
+      [userId, code, expirationDate],
     );
   }
 

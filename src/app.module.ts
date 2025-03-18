@@ -33,15 +33,19 @@ import { CqrsModule } from '@nestjs/cqrs';
       inject: [CoreConfig],
     }),
     // Connect to PostgreSQL
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'nodejs',
-      password: 'nodejs',
-      database: 'BloggersPlatform',
-      autoLoadEntities: false,
-      synchronize: false,
+    TypeOrmModule.forRootAsync({
+      useFactory: (coreConfig: CoreConfig) => ({
+        type: 'postgres',
+        url: coreConfig.POSTGRESQL_URL,
+        autoLoadEntities: false,
+        synchronize: false,
+        // host: 'localhost',
+        // port: 5432,
+        // username: 'nodejs',
+        // password: 'nodejs',
+        // database: 'BloggersPlatform',
+      }),
+      inject: [CoreConfig],
     }),
     // Connect to MongoDB
     MongooseModule.forRootAsync({

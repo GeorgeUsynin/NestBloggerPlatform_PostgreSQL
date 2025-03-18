@@ -39,6 +39,15 @@ export class CoreConfig {
   ) as string;
 
   @IsNotEmpty({
+    message:
+      'Set Env variable POSTGRESQL_URL, example: postgresql://localhost/',
+  })
+  [ENV_VARIABLE_NAMES.POSTGRESQL_URL]: string = this.configService.get(
+    ENV_VARIABLE_NAMES.POSTGRESQL_URL,
+  ) as string;
+
+  // TODO: remove after migrating to SQL
+  @IsNotEmpty({
     message: 'Set Env variable MONGO_URL, example: mongodb://localhost/',
   })
   [ENV_VARIABLE_NAMES.MONGO_URL]: string = this.configService.get(

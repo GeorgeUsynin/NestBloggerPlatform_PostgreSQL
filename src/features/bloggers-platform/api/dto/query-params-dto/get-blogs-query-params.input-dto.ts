@@ -11,6 +11,7 @@ export enum BlogsSortBy {
 // DTO for a query for a list of blogs with pagination, sorting, and filtering
 export class GetBlogsQueryParams extends BaseSortablePaginationParams<BlogsSortBy> {
   @ApiProperty({ enum: BlogsSortBy })
+  @IsOptional()
   @IsEnum(BlogsSortBy)
   sortBy = BlogsSortBy.CreatedAt;
 
