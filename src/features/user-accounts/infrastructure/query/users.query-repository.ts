@@ -31,8 +31,10 @@ export class UsersQueryRepository {
   async getAllUsers(
     query: GetUsersQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
-    const items = await this.findUserItemsByQueryParams(query);
-    const { count: totalCount } = await this.getTotalUsersCount(query);
+    const [items, { count: totalCount }] = await Promise.all([
+      this.findUserItemsByQueryParams(query),
+      this.getTotalUsersCount(query),
+    ]);
 
     return PaginatedViewDto.mapToView({
       items: items.map((item: DBUser) => UserViewDto.mapToView(item)),

@@ -3,7 +3,7 @@ import { AuthDeviceSessionsRepository } from '../../infrastructure/authDeviceSes
 
 export class TerminateAllAuthSessionDevicesExceptCurrentCommand {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly deviceId: string,
   ) {}
 }

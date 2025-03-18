@@ -45,7 +45,7 @@ export class JwtCookieStrategy extends PassportStrategy(
 
     // Checking if user exists
     const isUserExists = Boolean(
-      await this.usersRepository.findUserById(userId),
+      await this.usersRepository.findUserByIdSQL(Number(userId)),
     );
 
     if (!isUserExists) {
@@ -62,12 +62,13 @@ export class JwtCookieStrategy extends PassportStrategy(
 
     // Checking if refreshTokenVersion is valid
     const isRefreshTokenVersionValid =
-      new Date(Number(iat) * 1000).toISOString() === authDeviceSession.issuedAt;
+      new Date(Number(iat) * 1000).toString() ===
+      authDeviceSession.issuedAt.toString();
 
     if (!isRefreshTokenVersionValid) {
       throw UnauthorizedDomainException.create();
     }
 
-    return { id: payload.id, deviceId };
+    return { id: Number(payload.id), deviceId };
   }
 }

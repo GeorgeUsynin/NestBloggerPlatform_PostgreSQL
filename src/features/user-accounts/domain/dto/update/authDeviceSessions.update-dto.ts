@@ -1,4 +1,4 @@
 export class UpdateAuthDeviceSessionDto {
-  issuedAt: string;
-  expirationDateOfRefreshToken: string;
+  issuedAt: Date;
+  expirationDateOfRefreshToken: Date;
 }

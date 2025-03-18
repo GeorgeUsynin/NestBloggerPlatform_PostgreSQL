@@ -1,9 +1,14 @@
+import { validate as isUUID } from 'uuid';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthDeviceSessionsRepository } from '../../infrastructure/authDeviceSessions.repository';
+import {
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from '../../../../core/exceptions/domain-exceptions';
 
 export class TerminateAuthSessionDeviceByIdCommand {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly deviceId: string,
   ) {}
 }
@@ -17,13 +22,22 @@ export class TerminateAuthSessionDeviceByIdUseCase
   ) {}
 
   async execute({ userId, deviceId }: TerminateAuthSessionDeviceByIdCommand) {
+    if (!isUUID(deviceId)) {
+      throw NotFoundDomainException.create('Device not found');
+    }
+
     const authSessionDevice =
       await this.authDeviceSessionsRepository.findAuthDeviceSessionByDeviceIdOrNotFoundFail(
         deviceId,
       );
 
-    if (authSessionDevice.isDeviceOwner(userId)) {
+    // Is device owner check
+    if (authSessionDevice.userId === userId) {
       await this.authDeviceSessionsRepository.deleteDeviceSessionById(deviceId);
+    } else {
+      throw ForbiddenDomainException.create(
+        'You are not an owner of the device',
+      );
     }
   }
 }

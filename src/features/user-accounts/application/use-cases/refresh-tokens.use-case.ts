@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 
 export class RefreshTokensCommand {
   constructor(
-    public readonly userId: string,
+    public readonly userId: number,
     public readonly deviceId: string,
   ) {}
 }
@@ -42,17 +42,14 @@ export class RefreshTokensUseCase
 
     const { iat, exp } = this.refreshTokenContext.decode(refreshToken);
 
-    const authDeviceSession =
-      await this.authDeviceSessionsRepository.findAuthDeviceSessionByDeviceIdOrNotFoundFail(
-        deviceId,
-      );
+    await this.authDeviceSessionsRepository.findAuthDeviceSessionByDeviceIdOrNotFoundFail(
+      deviceId,
+    );
 
-    authDeviceSession.update({
-      issuedAt: new Date(Number(iat) * 1000).toISOString(),
-      expirationDateOfRefreshToken: new Date(Number(exp) * 1000).toISOString(),
+    await this.authDeviceSessionsRepository.updateAuthDeviceSession(deviceId, {
+      issuedAt: new Date(Number(iat) * 1000),
+      expirationDateOfRefreshToken: new Date(Number(exp) * 1000),
     });
-
-    await this.authDeviceSessionsRepository.save(authDeviceSession);
 
     return { accessToken, refreshToken };
   }

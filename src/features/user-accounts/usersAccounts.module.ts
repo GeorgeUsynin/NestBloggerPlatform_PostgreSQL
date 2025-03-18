@@ -34,16 +34,9 @@ import {
   TerminateAllAuthSessionDevicesExceptCurrentUseCase,
   TerminateAuthSessionDeviceByIdUseCase,
 } from './application/use-cases';
-import {
-  AuthDeviceSession,
-  AuthDeviceSessionSchema,
-} from './domain/authDeviceSession.entity';
 import { SecurityDevicesController } from './api/securityDevices.controller';
 
-const mongooseModels = [
-  { name: User.name, schema: UserSchema },
-  { name: AuthDeviceSession.name, schema: AuthDeviceSessionSchema },
-];
+const mongooseModels = [{ name: User.name, schema: UserSchema }];
 const useCases = [
   CreateUserUseCase,
   DeleteUserUseCase,

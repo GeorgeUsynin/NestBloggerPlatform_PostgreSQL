@@ -1,8 +1,8 @@
 export class CreateAuthDeviceSessionDto {
-  userId: string;
+  userId: number;
   deviceId: string;
-  issuedAt: string;
+  issuedAt: Date;
   deviceName: string;
   clientIp: string;
-  expirationDateOfRefreshToken: string;
+  expirationDateOfRefreshToken: Date;
 }

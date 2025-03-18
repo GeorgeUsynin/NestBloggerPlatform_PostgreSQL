@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AuthDeviceSessionDocument } from '../../../domain/authDeviceSession.entity';
+import { DBAuthDeviceSession } from 'src/features/user-accounts/infrastructure/types';
 
 export class AuthDeviceSessionViewDto {
   @ApiProperty({ type: String })
@@ -8,14 +8,14 @@ export class AuthDeviceSessionViewDto {
   @ApiProperty({ type: String })
   ip: string;
 
-  @ApiProperty({ type: String })
-  lastActiveDate: string;
+  @ApiProperty({ type: Date })
+  lastActiveDate: Date;
 
   @ApiProperty({ type: String })
   title: string;
 
   static mapToView(
-    authDeviceSession: AuthDeviceSessionDocument,
+    authDeviceSession: DBAuthDeviceSession,
   ): AuthDeviceSessionViewDto {
     const dto = new AuthDeviceSessionViewDto();
 
