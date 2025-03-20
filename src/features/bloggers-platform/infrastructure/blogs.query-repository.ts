@@ -33,7 +33,6 @@ export class BlogsQueryRepository {
     query: GetBlogsQueryParams,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
     // TODO: Refactor with dynamic query and filter!
-
     const [items, totalCount] = await Promise.all([
       this.findBlogItemsByQueryParams(query),
       this.getTotalBlogsCount(query),

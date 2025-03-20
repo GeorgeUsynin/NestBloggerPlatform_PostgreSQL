@@ -35,19 +35,15 @@ export class SwaggerUpdatePostInputDto implements UpdatePostInputDto {
     maxLength: contentConstraints.maxLength,
   })
   content: string;
-
-  @ApiProperty({
-    type: String,
-  })
-  blogId: string;
 }
 
-export const UpdatePostApi = () => {
+export const UpdateByBlogIDAndPostIDApi = () => {
   return applyDecorators(
     ApiOperation({
       summary: 'Update existing post by id with InputModel',
     }),
-    ApiParam({ name: 'id', type: String, description: 'Post id' }),
+    ApiParam({ name: 'blogId', type: String, description: 'Blog id' }),
+    ApiParam({ name: 'postId', type: String, description: 'Post id' }),
     ApiBody({
       type: SwaggerUpdatePostInputDto,
       description: 'Data for updating',

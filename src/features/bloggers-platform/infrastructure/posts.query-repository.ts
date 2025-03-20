@@ -1,4 +1,3 @@
-import { Post, PostModelType } from '../domain/post.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
@@ -15,8 +14,6 @@ import { BlogsRepository } from './blogs.repository';
 @Injectable()
 export class PostsQueryRepository {
   constructor(
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
     private blogsRepository: BlogsRepository,
     @InjectModel(Like.name)
     private LikeModel: LikeModelType,
@@ -31,7 +28,6 @@ export class PostsQueryRepository {
     blogId?: number,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     // TODO: Refactor with dynamic query and filter!
-
     const [items, totalCount] = await Promise.all([
       this.findPostItemsByQueryParams(query, blogId),
       this.getTotalPostCount(blogId),

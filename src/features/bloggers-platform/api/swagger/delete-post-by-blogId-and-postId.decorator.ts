@@ -7,12 +7,13 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-export const DeletePostApi = () => {
+export const DeleteByBlogIDAndPostIDApi = () => {
   return applyDecorators(
     ApiOperation({
       summary: 'Delete post specified by id',
     }),
-    ApiParam({ name: 'id', type: String, description: 'Post id' }),
+    ApiParam({ name: 'blogId', type: String, description: 'Blog id' }),
+    ApiParam({ name: 'postId', type: String, description: 'Post id' }),
     ApiNoContentResponse({
       description: 'No Content',
     }),

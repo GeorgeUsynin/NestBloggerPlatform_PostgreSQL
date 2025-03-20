@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Post, PostDocument, PostModelType } from '../domain/post.entity';
-import { InjectModel } from '@nestjs/mongoose';
+import { PostDocument } from '../domain/post.entity';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreatePostDto } from '../domain/dto/create/posts.create-dto';
 import { DBPost } from './types';
@@ -10,12 +9,9 @@ import { UpdatePostDto } from '../domain/dto/update/posts.update-dto';
 
 @Injectable()
 export class PostsRepository {
-  constructor(
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
-    @InjectDataSource() private dataSource: DataSource,
-  ) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
+  // TODO: remove after migration to SQL
   async save(post: PostDocument) {
     return post.save();
   }
@@ -65,15 +61,15 @@ export class PostsRepository {
   }
 
   async update(postId: number, dto: UpdatePostDto) {
-    const { blogId, content, shortDescription, title } = dto;
+    const { content, shortDescription, title } = dto;
 
     return this.dataSource.query(
       `
         UPDATE "Posts"
-        SET content = $1, "shortDescription" = $2, title = $3, "blogId" = $4 
-        WHERE id = $5 AND "deletedAt" IS NULL;
+        SET content = $1, "shortDescription" = $2, title = $3
+        WHERE id = $4 AND "deletedAt" IS NULL;
         `,
-      [content, shortDescription, title, Number(blogId), postId],
+      [content, shortDescription, title, postId],
     );
   }
 

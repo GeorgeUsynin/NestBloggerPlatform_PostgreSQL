@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { GetBlogsQueryParams } from './dto/query-params-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
@@ -26,7 +27,6 @@ export class BlogsController {
     private postsQueryRepository: PostsQueryRepository,
   ) {}
 
-  // Ready
   @Get()
   @HttpCode(HttpStatus.OK)
   @GetAllBlogsApi()
@@ -36,7 +36,6 @@ export class BlogsController {
     return this.blogsQueryRepository.getAllBlogs(query);
   }
 
-  // Ready
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @GetBlogApi()
@@ -46,8 +45,7 @@ export class BlogsController {
     return this.blogsQueryRepository.getByIdOrNotFoundFail(id);
   }
 
-  // Ready
-  // @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtOptionalAuthGuard)
   @Get(':blogId/posts')
   @HttpCode(HttpStatus.OK)
   @GetAllPostsByBlogIdApi()

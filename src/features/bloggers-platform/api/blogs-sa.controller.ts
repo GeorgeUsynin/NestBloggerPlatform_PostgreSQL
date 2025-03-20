@@ -19,7 +19,7 @@ import { BlogViewDto } from './dto/view-dto/blogs.view-dto';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query-repository';
 import { CreateBlogInputDto } from './dto/input-dto/create/blogs.input-dto';
 import { UpdateBlogInputDto } from './dto/input-dto/update/blogs.input-dto';
-import { CreatePostInputDtoWithoutBlogId } from './dto/input-dto/create/posts.input-dto';
+import { CreatePostInputDto } from './dto/input-dto/create/posts.input-dto';
 import { PostViewDto } from './dto/view-dto/posts.view-dto';
 import { PostsQueryRepository } from '../infrastructure/posts.query-repository';
 import { GetPostsQueryParams } from './dto/query-params-dto/get-posts-query-params.input-dto';
@@ -33,8 +33,8 @@ import {
   CreatePostByBlogIdApi,
   UpdateBlogApi,
   DeleteBlogApi,
-  UpdatePostApi,
-  DeletePostApi,
+  UpdateByBlogIDAndPostIDApi,
+  DeleteByBlogIDAndPostIDApi,
 } from './swagger';
 import { BasicAuthGuard } from '../../user-accounts/guards/basic/basic-auth.guard';
 import {
@@ -48,6 +48,7 @@ import {
 import { ApiBasicAuth } from '@nestjs/swagger';
 import { UpdatePostInputDto } from './dto/input-dto/update/posts.input-dto';
 
+@ApiBasicAuth()
 @UseGuards(BasicAuthGuard)
 @Controller('sa/blogs')
 export class BlogsSAController {
@@ -57,8 +58,6 @@ export class BlogsSAController {
     private commandBus: CommandBus,
   ) {}
 
-  // Ready
-  @ApiBasicAuth()
   @Get()
   @HttpCode(HttpStatus.OK)
   @GetAllBlogsApi()
@@ -68,8 +67,35 @@ export class BlogsSAController {
     return this.blogsQueryRepository.getAllBlogs(query);
   }
 
-  // Ready
-  // @UseGuards(JwtOptionalAuthGuard)
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @CreateBlogApi()
+  async createBlog(@Body() payload: CreateBlogInputDto): Promise<BlogViewDto> {
+    const blogId = await this.commandBus.execute(
+      new CreateBlogCommand(payload),
+    );
+
+    return this.blogsQueryRepository.getByIdOrNotFoundFail(blogId);
+  }
+
+  @Put(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UpdateBlogApi()
+  async updateBlogById(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() payload: UpdateBlogInputDto,
+  ): Promise<void> {
+    return this.commandBus.execute(new UpdateBlogCommand(id, payload));
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @DeleteBlogApi()
+  async deleteBlogById(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.commandBus.execute(new DeleteBlogCommand(id));
+  }
+
+  @UseGuards(JwtOptionalAuthGuard)
   @Get(':blogId/posts')
   @HttpCode(HttpStatus.OK)
   @GetAllPostsByBlogIdApi()
@@ -83,87 +109,42 @@ export class BlogsSAController {
     return this.postsQueryRepository.getAllPostsByBlogId(query, userId, blogId);
   }
 
-  // Ready
-  @ApiBasicAuth()
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @CreateBlogApi()
-  async createBlog(@Body() payload: CreateBlogInputDto): Promise<BlogViewDto> {
-    const blogId = await this.commandBus.execute(
-      new CreateBlogCommand(payload),
-    );
-
-    return this.blogsQueryRepository.getByIdOrNotFoundFail(blogId);
-  }
-
-  // Ready
-  @ApiBasicAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtOptionalAuthGuard)
   @Post(':blogId/posts')
   @HttpCode(HttpStatus.CREATED)
   @CreatePostByBlogIdApi()
   async createPostByBlogID(
-    @Param('blogId') blogId: string,
-    @Body() payload: CreatePostInputDtoWithoutBlogId,
+    @Param('blogId', ParseIntPipe) blogId: number,
+    @Body() payload: CreatePostInputDto,
     @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ): Promise<PostViewDto> {
     const userId = user ? user.id : null;
 
     const postId: number = await this.commandBus.execute(
-      new CreatePostCommand({
-        ...payload,
-        blogId,
-      }),
+      new CreatePostCommand(blogId, payload),
     );
 
     return this.postsQueryRepository.getByIdOrNotFoundFail(postId, userId);
   }
 
-  // Ready
-  @ApiBasicAuth()
-  @Put(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UpdateBlogApi()
-  async updateBlogById(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() payload: UpdateBlogInputDto,
-  ): Promise<void> {
-    return this.commandBus.execute(new UpdateBlogCommand(id, payload));
-  }
-
-  // Ready
-  @ApiBasicAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtOptionalAuthGuard)
   @Put(':blogId/posts/:postId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  // TODO: fix api route
-  @UpdatePostApi()
+  @UpdateByBlogIDAndPostIDApi()
   async updatePostByBlogIDAndPostID(
-    @Param('blogId') blogId: string,
+    @Param('blogId', ParseIntPipe) blogId: number,
     @Param('postId', ParseIntPipe) postId: number,
     @Body() payload: UpdatePostInputDto,
   ): Promise<void> {
     return this.commandBus.execute(
-      new UpdatePostByBlogIdAndPostIdCommand(postId, { ...payload, blogId }),
+      new UpdatePostByBlogIdAndPostIdCommand(blogId, postId, payload),
     );
   }
 
-  // Ready
-  @ApiBasicAuth()
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @DeleteBlogApi()
-  async deleteBlogById(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.commandBus.execute(new DeleteBlogCommand(id));
-  }
-
-  // Ready
-  @ApiBasicAuth()
-  // @UseGuards(JwtOptionalAuthGuard)
+  @UseGuards(JwtOptionalAuthGuard)
   @Delete(':blogId/posts/:postId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  // TODO: fix api route
-  @DeletePostApi()
+  @DeleteByBlogIDAndPostIDApi()
   async deletePostByBlogIDAndPostID(
     @Param('blogId', ParseIntPipe) blogId: number,
     @Param('postId', ParseIntPipe) postId: number,

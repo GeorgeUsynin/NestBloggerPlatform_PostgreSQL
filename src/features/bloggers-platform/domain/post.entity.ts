@@ -1,7 +1,5 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, SchemaTimestampsConfig } from 'mongoose';
-import { CreatePostDto } from './dto/create/posts.create-dto';
-import { UpdatePostDto } from './dto/update/posts.update-dto';
 import { Likeable } from './shared.entity';
 
 export enum DeletionStatus {
@@ -42,23 +40,6 @@ export class Post extends Likeable {
 
   @Prop({ type: String, required: true })
   blogName: string;
-
-  @Prop({ enum: DeletionStatus, default: DeletionStatus.NotDeleted })
-  deletionStatus: DeletionStatus;
-
-  makeDeleted() {
-    if (this.deletionStatus !== DeletionStatus.NotDeleted) {
-      throw new Error('Entity already deleted');
-    }
-    this.deletionStatus = DeletionStatus.PermanentDeleted;
-  }
-
-  update(dto: UpdatePostDto) {
-    this.title = dto.title;
-    this.shortDescription = dto.shortDescription;
-    this.content = dto.content;
-    this.blogId = dto.blogId;
-  }
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

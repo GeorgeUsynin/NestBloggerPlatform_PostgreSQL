@@ -1,6 +1,5 @@
 export * from './create-blog.decorator';
 export * from './create-post-by-blogId.decorator';
-export * from './create-post.decorator';
 export * from './delete-blog.decorator';
 export * from './get-all-blogs.decorator';
 export * from './get-all-posts-by-blogId.decorator';
@@ -8,8 +7,8 @@ export * from './get-blog.decorator';
 export * from './update-blog.decorator';
 export * from './get-all-posts.decorator';
 export * from './get-post.decorator';
-export * from './update-post.decorator';
-export * from './delete-post.decorator';
+export * from './update-post-by-blogId-and-postId.decorator';
+export * from './delete-post-by-blogId-and-postId.decorator';
 export * from './get-all-comments-by-postId';
 export * from './get-comment.decorator';
 export * from './update-comment.decorator';

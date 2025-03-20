@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -13,39 +12,30 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ApiBasicAuth, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { PostViewDto } from './dto/view-dto/posts.view-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { PostsQueryRepository } from '../infrastructure/posts.query-repository';
-import { CreatePostInputDto } from './dto/input-dto/create/posts.input-dto';
 import { GetPostsQueryParams } from './dto/query-params-dto/get-posts-query-params.input-dto';
 import { GetCommentsQueryParams } from './dto/query-params-dto/get-comments-query-params.input-dto';
-import { UpdatePostInputDto } from './dto/input-dto/update/posts.input-dto';
 import { CommentViewDto } from './dto/view-dto/comments.view-dto';
 import { CreateCommentInputDto } from './dto/input-dto/create/comments.input-dto';
 import { UpdateLikeInputDto } from './dto/input-dto/update/likes.input-dto';
 import { CommentsQueryRepository } from '../infrastructure/comments.query-repository';
 import { ObjectIdValidationPipe } from '../../../core/pipes/objectId-validation-pipe';
 import { ExtractUserFromRequest } from '../../user-accounts/guards/decorators/params/ExtractUserFromRequest.decorator';
-import { BasicAuthGuard } from '../../user-accounts/guards/basic/basic-auth.guard';
 import { UserContextDto } from '../../user-accounts/guards/dto/user-context.dto';
 import { JwtHeaderAuthGuard } from '../../user-accounts/guards/bearer/jwt-header-auth.guard';
 import { JwtOptionalAuthGuard } from '../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../user-accounts/guards/decorators/params/ExtractUserIfExistsFromRequest.decorator';
 import {
-  CreatePostApi,
   GetAllPostsApi,
   GetPostApi,
-  UpdatePostApi,
-  DeletePostApi,
   GetAllCommentsByPostIdApi,
   UpdatePostLikeStatusApi,
   CreateCommentByPostIdApi,
 } from './swagger';
 import {
-  CreatePostCommand,
-  UpdatePostCommand,
-  DeletePostCommand,
   CreateCommentCommand,
   UpdateLikePostStatusCommand,
 } from '../application/use-cases';
@@ -102,24 +92,6 @@ export class PostsController {
     );
   }
 
-  @ApiBasicAuth()
-  @UseGuards(JwtOptionalAuthGuard, BasicAuthGuard)
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @CreatePostApi()
-  async createPost(
-    @Body() payload: CreatePostInputDto,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  ): Promise<PostViewDto> {
-    const userId = user ? user.id : null;
-
-    const postId = await this.commandBus.execute(
-      new CreatePostCommand(payload),
-    );
-
-    return this.postsQueryRepository.getByIdOrNotFoundFail(postId, userId);
-  }
-
   @ApiBearerAuth()
   @UseGuards(JwtHeaderAuthGuard)
   @Post(':postId/comments')
@@ -144,18 +116,6 @@ export class PostsController {
     );
   }
 
-  @ApiBasicAuth()
-  @UseGuards(BasicAuthGuard)
-  @Put(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UpdatePostApi()
-  async updatePostById(
-    @Param('id', ObjectIdValidationPipe) id: string,
-    @Body() payload: UpdatePostInputDto,
-  ): Promise<void> {
-    return this.commandBus.execute(new UpdatePostCommand(id, payload));
-  }
-
   @ApiBearerAuth()
   @UseGuards(JwtHeaderAuthGuard)
   @Put(':id/like-status')
@@ -169,16 +129,5 @@ export class PostsController {
     return this.commandBus.execute(
       new UpdateLikePostStatusCommand(postId, user.id, payload),
     );
-  }
-
-  @ApiBasicAuth()
-  @UseGuards(BasicAuthGuard)
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @DeletePostApi()
-  async deletePostById(
-    @Param('id', ObjectIdValidationPipe) id: string,
-  ): Promise<void> {
-    return this.commandBus.execute(new DeletePostCommand(id));
   }
 }

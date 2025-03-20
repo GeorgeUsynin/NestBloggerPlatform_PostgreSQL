@@ -4,7 +4,10 @@ import { CreatePostDto } from '../../dto/create/posts.create-dto';
 import { PostsRepository } from '../../../infrastructure/posts.repository';
 
 export class CreatePostCommand {
-  constructor(public readonly dto: CreatePostDto) {}
+  constructor(
+    public readonly blogId: number,
+    public readonly dto: CreatePostDto,
+  ) {}
 }
 
 @CommandHandler(CreatePostCommand)
@@ -16,9 +19,7 @@ export class CreatePostUseCase
     private blogsRepository: BlogsRepository,
   ) {}
 
-  async execute({ dto }: CreatePostCommand) {
-    const blogId = Number(dto.blogId);
-
+  async execute({ blogId, dto }: CreatePostCommand) {
     const blog = await this.blogsRepository.findBlogByIdOrNotFoundFail(blogId);
 
     const newPostId = await this.postsRepository.createPost({

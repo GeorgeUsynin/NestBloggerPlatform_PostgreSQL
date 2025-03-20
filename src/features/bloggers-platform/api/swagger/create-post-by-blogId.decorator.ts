@@ -7,11 +7,36 @@ import {
   ApiOperation,
   ApiParam,
   ApiUnauthorizedResponse,
-  OmitType,
 } from '@nestjs/swagger';
 import { SwaggerErrorsMessagesViewDto } from '../../../../core/dto/swagger-errors-messages.view-dto';
-import { SwaggerCreatePostInputDto } from './create-post.decorator';
 import { PostViewDto } from '../dto/view-dto/posts.view-dto';
+import { CreatePostInputDto } from '../dto/input-dto/create/posts.input-dto';
+import {
+  contentConstraints,
+  shortDescriptionConstraints,
+  titleConstraints,
+} from '../../domain/post.entity';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class SwaggerCreatePostInputDto implements CreatePostInputDto {
+  @ApiProperty({
+    type: String,
+    maxLength: titleConstraints.maxLength,
+  })
+  title: string;
+
+  @ApiProperty({
+    type: String,
+    maxLength: shortDescriptionConstraints.maxLength,
+  })
+  shortDescription: string;
+
+  @ApiProperty({
+    type: String,
+    maxLength: contentConstraints.maxLength,
+  })
+  content: string;
+}
 
 export const CreatePostByBlogIdApi = () => {
   return applyDecorators(
@@ -20,7 +45,7 @@ export const CreatePostByBlogIdApi = () => {
     }),
     ApiParam({ name: 'blogId', type: String, description: 'Blog id' }),
     ApiBody({
-      type: OmitType(SwaggerCreatePostInputDto, ['blogId'] as const),
+      type: SwaggerCreatePostInputDto,
       description: 'Data for constructing new Post entity',
       required: false,
     }),

@@ -6,6 +6,7 @@ import { NotFoundDomainException } from '../../../../../core/exceptions/domain-e
 
 export class UpdatePostByBlogIdAndPostIdCommand {
   constructor(
+    public readonly blogId: number,
     public readonly postId: number,
     public readonly dto: UpdatePostDto,
   ) {}
@@ -20,8 +21,7 @@ export class UpdatePostByBlogIdAndPostIdUseCase
     private blogsRepository: BlogsRepository,
   ) {}
 
-  async execute({ postId, dto }: UpdatePostByBlogIdAndPostIdCommand) {
-    const blogId = Number(dto.blogId);
+  async execute({ blogId, postId, dto }: UpdatePostByBlogIdAndPostIdCommand) {
     const blog = await this.blogsRepository.findBlogById(blogId);
 
     // Check that blog is exist
