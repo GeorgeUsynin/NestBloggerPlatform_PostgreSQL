@@ -13,7 +13,7 @@ export class CreateUserCommand {
 
 @CommandHandler(CreateUserCommand)
 export class CreateUserUseCase
-  implements ICommandHandler<CreateUserCommand, string>
+  implements ICommandHandler<CreateUserCommand, number>
 {
   constructor(
     private usersRepository: UsersRepository,

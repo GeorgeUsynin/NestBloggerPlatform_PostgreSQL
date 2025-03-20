@@ -21,6 +21,7 @@ export class UpdatePostUseCase
   ) {}
 
   async execute({ postId, dto }: UpdatePostCommand) {
+    //@ts-expect-error
     const blog = await this.blogsRepository.findBlogById(dto.blogId);
 
     // Check that blog is exist
@@ -28,6 +29,7 @@ export class UpdatePostUseCase
       throw BadRequestDomainException.create('Blog not found', 'blogId');
     }
 
+    // @ts-expect-error
     const post = await this.postsRepository.findPostByIdOrNotFoundFail(postId);
 
     // don't assign properties directly to entities in services! even for changing a single property

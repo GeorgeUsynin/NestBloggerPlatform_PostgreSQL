@@ -46,19 +46,6 @@ export class Post extends Likeable {
   @Prop({ enum: DeletionStatus, default: DeletionStatus.NotDeleted })
   deletionStatus: DeletionStatus;
 
-  static createPost(dto: CreatePostDto): PostDocument {
-    // PostDocument!
-    const post = new this(); //this will be a PostModel when we will call createPost method!
-
-    post.blogId = dto.blogId;
-    post.blogName = dto.blogName;
-    post.content = dto.content;
-    post.shortDescription = dto.shortDescription;
-    post.title = dto.title;
-
-    return post as PostDocument;
-  }
-
   makeDeleted() {
     if (this.deletionStatus !== DeletionStatus.NotDeleted) {
       throw new Error('Entity already deleted');

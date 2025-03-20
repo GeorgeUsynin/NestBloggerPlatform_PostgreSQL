@@ -15,10 +15,6 @@ import { DataSource } from 'typeorm';
 @Controller('testing')
 export class TestingController {
   constructor(
-    @InjectModel(Blog.name)
-    private BlogModel: BlogModelType,
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
     @InjectModel(Comment.name)
     private CommentModel: CommentModelType,
     @InjectModel(Like.name)
@@ -32,8 +28,8 @@ export class TestingController {
   async deleteAll() {
     await this.dataSource.query(`DELETE FROM "Users"`);
     await this.dataSource.query(`DELETE FROM "AuthDeviceSessions"`);
-    await this.BlogModel.deleteMany();
-    await this.PostModel.deleteMany();
+    await this.dataSource.query(`DELETE FROM "Blogs"`);
+    await this.dataSource.query(`DELETE FROM "Posts"`);
     await this.CommentModel.deleteMany();
     await this.LikeModel.deleteMany();
   }

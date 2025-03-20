@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UsersAccountsModule } from '../user-accounts/usersAccounts.module';
+import { BlogsSAController } from './api/blogs-sa.controller';
 import { BlogsController } from './api/blogs.controller';
 import { PostsController } from './api/posts.controller';
 import { BlogsQueryRepository } from './infrastructure/blogs.query-repository';
@@ -28,6 +29,8 @@ import {
   CreateCommentUseCase,
   UpdateLikeCommentStatusUseCase,
   UpdateLikePostStatusUseCase,
+  UpdatePostByBlogIdAndPostIdUseCase,
+  DeletePostByBlogIdAndPostIdUseCase,
 } from './application/use-cases';
 
 const mongooseModels = [
@@ -37,7 +40,12 @@ const mongooseModels = [
   { name: Like.name, schema: LikeSchema },
 ];
 
-const controllers = [BlogsController, PostsController, CommentsController];
+const controllers = [
+  BlogsController,
+  BlogsSAController,
+  PostsController,
+  CommentsController,
+];
 
 const useCases = [
   CreateBlogUseCase,
@@ -51,6 +59,8 @@ const useCases = [
   DeleteCommentUseCase,
   UpdateLikeCommentStatusUseCase,
   UpdateLikePostStatusUseCase,
+  UpdatePostByBlogIdAndPostIdUseCase,
+  DeletePostByBlogIdAndPostIdUseCase,
 ];
 const repositories = [
   BlogsRepository,

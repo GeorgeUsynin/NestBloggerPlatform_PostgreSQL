@@ -26,6 +26,7 @@ export class UpdateLikePostStatusUseCase
   }
 
   getLikeableEntityById(id: string): Promise<PostDocument> {
+    // @ts-expect-error
     return this.postsRepository.findPostByIdOrNotFoundFail(id);
   }
 

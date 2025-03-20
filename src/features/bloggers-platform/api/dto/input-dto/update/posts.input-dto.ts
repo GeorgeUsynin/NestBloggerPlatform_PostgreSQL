@@ -4,11 +4,12 @@ import {
   shortDescriptionConstraints,
   titleConstraints,
 } from '../../../../domain/post.entity';
-import { BlogIsExist } from '../../../validate/blog-is-exist.decorator';
+// import { BlogIsExist } from '../../../validate/blog-is-exist.decorator';
 import {
   MaxLengthWithMessage,
   IsStringWithTrim,
 } from '../../../../../../core/decorators/validation';
+import { IsOptional } from 'class-validator';
 
 export class UpdatePostInputDto implements UpdatePostDto {
   @MaxLengthWithMessage(titleConstraints.maxLength)
@@ -23,8 +24,9 @@ export class UpdatePostInputDto implements UpdatePostDto {
   @IsStringWithTrim()
   content: string;
 
-  // https://github.com/typestack/class-validator?tab=readme-ov-file#custom-validation-decorators
-  @BlogIsExist()
+  // // https://github.com/typestack/class-validator?tab=readme-ov-file#custom-validation-decorators
+  // @BlogIsExist()
+  @IsOptional()
   @IsStringWithTrim()
   blogId: string;
 }

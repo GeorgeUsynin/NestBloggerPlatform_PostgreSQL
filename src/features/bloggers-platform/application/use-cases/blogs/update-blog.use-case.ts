@@ -4,7 +4,7 @@ import { BlogsRepository } from '../../../infrastructure/blogs.repository';
 
 export class UpdateBlogCommand {
   constructor(
-    public readonly blogId: string,
+    public readonly blogId: number,
     public readonly dto: UpdateBlogDto,
   ) {}
 }
@@ -16,12 +16,8 @@ export class UpdateBlogUseCase
   constructor(private blogsRepository: BlogsRepository) {}
 
   async execute({ blogId, dto }: UpdateBlogCommand) {
-    const blog = await this.blogsRepository.findBlogByIdOrNotFoundFail(blogId);
+    await this.blogsRepository.findBlogByIdOrNotFoundFail(blogId);
 
-    // don't assign properties directly to entities in services! even for changing a single property
-    // create a method instead
-    blog.update(dto); // change detection
-
-    await this.blogsRepository.save(blog);
+    await this.blogsRepository.update(blogId, dto);
   }
 }

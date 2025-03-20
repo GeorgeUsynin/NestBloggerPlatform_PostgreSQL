@@ -1,59 +1,46 @@
-import { DeletionStatus, Post, PostModelType } from '../domain/post.entity';
+import { Post, PostModelType } from '../domain/post.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { PostViewDto } from '../api/dto/view-dto/posts.view-dto';
-import { FilterQuery } from 'mongoose';
-import { Blog } from '../domain/blog.entity';
 import { Like, LikeModelType } from '../domain/like.entity';
-import { BlogModelType } from '../domain/blog.entity';
 import { User, UserModelType } from '../../user-accounts/domain/user.entity';
 import { GetPostsQueryParams } from '../api/dto/query-params-dto/get-posts-query-params.input-dto';
 import { LikeStatus } from '../types';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { DBPost } from './types';
+import { BlogsRepository } from './blogs.repository';
 
 @Injectable()
 export class PostsQueryRepository {
   constructor(
     @InjectModel(Post.name)
     private PostModel: PostModelType,
-    @InjectModel(Blog.name)
-    private BlogModel: BlogModelType,
+    private blogsRepository: BlogsRepository,
     @InjectModel(Like.name)
     private LikeModel: LikeModelType,
     @InjectModel(User.name)
     private UserModel: UserModelType,
+    @InjectDataSource() private dataSource: DataSource,
   ) {}
 
   async getAllPosts(
     query: GetPostsQueryParams,
     userId: number | null,
-    blogId?: string,
+    blogId?: number,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const filter: FilterQuery<Post> = {
-      deletionStatus: DeletionStatus.NotDeleted,
-      ...(blogId && { blogId }),
-    };
+    // TODO: Refactor with dynamic query and filter!
 
-    const items = await this.findPostItemsByParamsAndFilter(query, filter);
-    const totalCount = await this.getTotalCountOfFilteredPosts(filter);
-
-    const postsIds = items.map((item) => item._id.toString());
-    const likes = await this.LikeModel.find({
-      parentId: { $in: postsIds },
-      userId,
-    });
+    const [items, totalCount] = await Promise.all([
+      this.findPostItemsByQueryParams(query, blogId),
+      this.getTotalPostCount(blogId),
+    ]);
 
     const mappedItems = items.map(async (item) => {
-      let myStatus: LikeStatus = LikeStatus.None;
+      const myStatus: LikeStatus = LikeStatus.None;
 
-      if (likes.length > 0) {
-        const like = likes.find(
-          (like) => like.parentId === item._id.toString(),
-        );
-        myStatus = like ? like.status : LikeStatus.None;
-      }
-
-      const newestLikes = await this.getNewestLikes(item.id);
+      const newestLikes = [];
 
       return PostViewDto.mapToView(item, myStatus, newestLikes);
     });
@@ -69,9 +56,9 @@ export class PostsQueryRepository {
   async getAllPostsByBlogId(
     query: GetPostsQueryParams,
     userId: number | null,
-    blogId: string,
+    blogId: number,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const blog = await this.BlogModel.findById(blogId);
+    const blog = await this.blogsRepository.findBlogById(blogId);
 
     if (!blog) {
       throw new NotFoundException('Blog not found');
@@ -81,50 +68,89 @@ export class PostsQueryRepository {
   }
 
   async getByIdOrNotFoundFail(
-    id: string,
+    id: number,
     userId: number | null,
   ): Promise<PostViewDto> {
-    const post = await this.PostModel.findOne({
-      _id: id,
-      deletionStatus: DeletionStatus.NotDeleted,
-    }).exec();
+    const post: DBPost = (
+      await this.dataSource.query(
+        `
+      SELECT * FROM "Posts"
+      WHERE id = $1 AND "deletedAt" IS NULL;
+      `,
+        [id],
+      )
+    )[0];
 
     if (!post) {
       throw new NotFoundException('Post not found');
     }
 
-    let myStatus: LikeStatus = LikeStatus.None;
+    const myStatus: LikeStatus = LikeStatus.None;
 
-    if (userId) {
-      const like = await this.LikeModel.findOne({
-        parentId: post._id.toString(),
-        userId,
-      });
-      myStatus = like ? like.status : LikeStatus.None;
-    }
-
-    const newestLikes = await this.getNewestLikes(id);
+    const newestLikes = [];
 
     return PostViewDto.mapToView(post, myStatus, newestLikes);
   }
 
-  async findPostItemsByParamsAndFilter(
+  async findPostItemsByQueryParams(
     query: GetPostsQueryParams,
-    filter: FilterQuery<Post>,
+    blogId?: number,
   ) {
     const { sortBy, sortDirection, pageSize } = query;
 
-    return this.PostModel.find(filter)
-      .sort({ [sortBy]: sortDirection })
-      .skip(query.calculateSkip())
-      .limit(pageSize);
+    if (blogId) {
+      return this.dataSource.query(
+        `
+        SELECT * FROM "Posts" as p
+        WHERE p."deletedAt" IS NULL
+        AND p."blogId" = $1
+        ORDER BY p."${sortBy}" ${sortDirection}
+        LIMIT $2 OFFSET $3
+        `,
+        [blogId, pageSize, query.calculateSkip()],
+      );
+    } else {
+      return this.dataSource.query(
+        `
+        SELECT * FROM "Posts" as p
+        WHERE p."deletedAt" IS NULL
+        ORDER BY p."${sortBy}" ${sortDirection}
+        LIMIT $1 OFFSET $2
+        `,
+        [pageSize, query.calculateSkip()],
+      );
+    }
   }
 
-  async getTotalCountOfFilteredPosts(filter: FilterQuery<Post>) {
-    return this.PostModel.countDocuments(filter);
+  async getTotalPostCount(blogId?: number) {
+    if (blogId) {
+      const { count } = (
+        await this.dataSource.query(
+          `
+        SELECT COUNT(*)::int FROM "Posts" as p
+        WHERE p."deletedAt" IS NULL
+        AND p."blogId" = $1
+        `,
+          [blogId],
+        )
+      )[0];
+
+      return count;
+    } else {
+      const { count } = (
+        await this.dataSource.query(
+          `
+        SELECT COUNT(*)::int FROM "Posts" as p
+        WHERE p."deletedAt" IS NULL
+        `,
+        )
+      )[0];
+
+      return count;
+    }
   }
 
-  private async getNewestLikes(postId: string) {
+  private async getNewestLikes(postId: number) {
     const newestLikesRaw = await this.LikeModel.find({
       parentId: postId,
       status: LikeStatus.Like,

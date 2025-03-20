@@ -787,55 +787,6 @@ window.onload = function() {
           "tags": [
             "Blogs"
           ]
-        },
-        "post": {
-          "operationId": "BlogsController_createBlog",
-          "parameters": [],
-          "requestBody": {
-            "required": false,
-            "description": "Data for constructing new Blog entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwaggerCreateBlogInputDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "201": {
-              "description": "Returns the newly created blog",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/BlogViewDto"
-                  }
-                }
-              }
-            },
-            "400": {
-              "description": "If the inputModel has incorrect values",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "Unauthorized"
-            }
-          },
-          "security": [
-            {
-              "basic": []
-            }
-          ],
-          "summary": "Create new blog",
-          "tags": [
-            "Blogs"
-          ]
         }
       },
       "/blogs/{id}": {
@@ -868,95 +819,6 @@ window.onload = function() {
             }
           },
           "summary": "Returns blog by id",
-          "tags": [
-            "Blogs"
-          ]
-        },
-        "put": {
-          "operationId": "BlogsController_updateBlogById",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "description": "Blog id",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "requestBody": {
-            "required": false,
-            "description": "Data for updating",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwaggerUpdateBlogInputDto"
-                }
-              }
-            }
-          },
-          "responses": {
-            "204": {
-              "description": "No Content"
-            },
-            "400": {
-              "description": "If the inputModel has incorrect values",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "Unauthorized"
-            },
-            "404": {
-              "description": "Not Found"
-            }
-          },
-          "security": [
-            {
-              "basic": []
-            }
-          ],
-          "summary": "Update existing Blog by id with InputModel",
-          "tags": [
-            "Blogs"
-          ]
-        },
-        "delete": {
-          "operationId": "BlogsController_deleteBlogById",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "description": "Blog id",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "204": {
-              "description": "No Content"
-            },
-            "401": {
-              "description": "Unauthorized"
-            },
-            "404": {
-              "description": "Not Found"
-            }
-          },
-          "security": [
-            {
-              "basic": []
-            }
-          ],
-          "summary": "Delete blog specified by id",
           "tags": [
             "Blogs"
           ]
@@ -1058,9 +920,257 @@ window.onload = function() {
           "tags": [
             "Blogs"
           ]
+        }
+      },
+      "/sa/blogs": {
+        "get": {
+          "operationId": "BlogsSAController_getAllBlogs",
+          "parameters": [
+            {
+              "name": "pageNumber",
+              "required": false,
+              "in": "query",
+              "description": "pageNumber is number of portions that should be returned",
+              "schema": {
+                "minimum": 1,
+                "default": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "pageSize",
+              "required": false,
+              "in": "query",
+              "description": "pageSize is portions size that should be returned",
+              "schema": {
+                "minimum": 1,
+                "default": 10,
+                "type": "number"
+              }
+            },
+            {
+              "name": "sortDirection",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": "desc",
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            {
+              "name": "sortBy",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": "createdAt",
+                "type": "string",
+                "enum": [
+                  "createdAt",
+                  "name"
+                ]
+              }
+            },
+            {
+              "name": "searchNameTerm",
+              "required": false,
+              "in": "query",
+              "description": "Search term for blog Name: Name should contains this term in any position",
+              "schema": {
+                "nullable": true,
+                "default": null,
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/PaginatedViewDto"
+                      },
+                      {
+                        "properties": {
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/BlogViewDto"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Returns blogs with paging",
+          "tags": [
+            "BlogsSA"
+          ]
         },
         "post": {
-          "operationId": "BlogsController_createPostByBlogID",
+          "operationId": "BlogsSAController_createBlog",
+          "parameters": [],
+          "requestBody": {
+            "required": false,
+            "description": "Data for constructing new Blog entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwaggerCreateBlogInputDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Returns the newly created blog",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/BlogViewDto"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "If the inputModel has incorrect values",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Create new blog",
+          "tags": [
+            "BlogsSA"
+          ]
+        }
+      },
+      "/sa/blogs/{blogId}/posts": {
+        "get": {
+          "operationId": "BlogsSAController_getAllPostsByBlogId",
+          "parameters": [
+            {
+              "name": "pageNumber",
+              "required": false,
+              "in": "query",
+              "description": "pageNumber is number of portions that should be returned",
+              "schema": {
+                "minimum": 1,
+                "default": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "pageSize",
+              "required": false,
+              "in": "query",
+              "description": "pageSize is portions size that should be returned",
+              "schema": {
+                "minimum": 1,
+                "default": 10,
+                "type": "number"
+              }
+            },
+            {
+              "name": "sortDirection",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": "desc",
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            {
+              "name": "sortBy",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": "createdAt",
+                "type": "string",
+                "enum": [
+                  "createdAt",
+                  "title",
+                  "blogName"
+                ]
+              }
+            },
+            {
+              "name": "blogId",
+              "required": true,
+              "in": "path",
+              "description": "Blog id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/PaginatedViewDto"
+                      },
+                      {
+                        "properties": {
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/PostViewDto"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "If specified blog is not exists"
+            }
+          },
+          "summary": "Returns all posts for specified blog",
+          "tags": [
+            "BlogsSA"
+          ]
+        },
+        "post": {
+          "operationId": "BlogsSAController_createPostByBlogID",
           "parameters": [
             {
               "name": "blogId",
@@ -1118,7 +1228,221 @@ window.onload = function() {
           ],
           "summary": "Create new post for specific blog",
           "tags": [
-            "Blogs"
+            "BlogsSA"
+          ]
+        }
+      },
+      "/sa/blogs/{id}": {
+        "put": {
+          "operationId": "BlogsSAController_updateBlogById",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Blog id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": false,
+            "description": "Data for updating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwaggerUpdateBlogInputDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "400": {
+              "description": "If the inputModel has incorrect values",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Update existing Blog by id with InputModel",
+          "tags": [
+            "BlogsSA"
+          ]
+        },
+        "delete": {
+          "operationId": "BlogsSAController_deleteBlogById",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Blog id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Delete blog specified by id",
+          "tags": [
+            "BlogsSA"
+          ]
+        }
+      },
+      "/sa/blogs/{blogId}/posts/{postId}": {
+        "put": {
+          "operationId": "BlogsSAController_updatePostByBlogIDAndPostID",
+          "parameters": [
+            {
+              "name": "blogId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "postId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Post id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": false,
+            "description": "Data for updating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwaggerUpdatePostInputDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "400": {
+              "description": "If the inputModel has incorrect values",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Update existing post by id with InputModel",
+          "tags": [
+            "BlogsSA"
+          ]
+        },
+        "delete": {
+          "operationId": "BlogsSAController_deletePostByBlogIDAndPostID",
+          "parameters": [
+            {
+              "name": "blogId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "postId",
+              "required": true,
+              "in": "path",
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Post id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Delete post specified by id",
+          "tags": [
+            "BlogsSA"
           ]
         }
       },
@@ -2057,7 +2381,7 @@ window.onload = function() {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string"
+              "type": "number"
             },
             "description": {
               "type": "string"
@@ -2148,7 +2472,7 @@ window.onload = function() {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string"
+              "type": "number"
             },
             "title": {
               "type": "string"
@@ -2250,6 +2574,32 @@ window.onload = function() {
             "name",
             "description",
             "websiteUrl"
+          ]
+        },
+        "SwaggerUpdatePostInputDto": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "maxLength": 30
+            },
+            "shortDescription": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "content": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "blogId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "shortDescription",
+            "content",
+            "blogId"
           ]
         },
         "CommentatorInfo": {
@@ -2359,32 +2709,6 @@ window.onload = function() {
           },
           "required": [
             "content"
-          ]
-        },
-        "SwaggerUpdatePostInputDto": {
-          "type": "object",
-          "properties": {
-            "title": {
-              "type": "string",
-              "maxLength": 30
-            },
-            "shortDescription": {
-              "type": "string",
-              "maxLength": 100
-            },
-            "content": {
-              "type": "string",
-              "maxLength": 1000
-            },
-            "blogId": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "title",
-            "shortDescription",
-            "content",
-            "blogId"
           ]
         },
         "SwaggerUpdatePostLikeStatusInputDto": {

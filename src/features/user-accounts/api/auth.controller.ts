@@ -53,7 +53,7 @@ import {
 import { ThrottlerGuard, SkipThrottle } from '@nestjs/throttler';
 
 @Controller('auth')
-@UseGuards(ThrottlerGuard)
+// @UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(
     private authQueryRepository: AuthQueryRepository,

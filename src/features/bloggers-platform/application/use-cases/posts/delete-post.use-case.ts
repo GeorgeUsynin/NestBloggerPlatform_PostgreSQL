@@ -12,6 +12,7 @@ export class DeletePostUseCase
   constructor(private postsRepository: PostsRepository) {}
 
   async execute({ id }: DeletePostCommand) {
+    // @ts-expect-error
     const post = await this.postsRepository.findPostByIdOrNotFoundFail(id);
 
     post.makeDeleted();

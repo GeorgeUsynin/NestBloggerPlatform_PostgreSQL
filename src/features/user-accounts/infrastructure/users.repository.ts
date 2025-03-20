@@ -47,7 +47,7 @@ export class UsersRepository {
     )[0];
   }
 
-  async createUser(dto: CreateUserDto) {
+  async createUser(dto: CreateUserDto): Promise<DBUser['id']> {
     const { email, login, password } = dto;
 
     const query = `

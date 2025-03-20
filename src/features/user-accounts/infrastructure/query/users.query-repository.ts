@@ -31,7 +31,9 @@ export class UsersQueryRepository {
   async getAllUsers(
     query: GetUsersQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
-    const [items, { count: totalCount }] = await Promise.all([
+    // TODO: Refactor with dynamic query and filter!
+
+    const [items, totalCount] = await Promise.all([
       this.findUserItemsByQueryParams(query),
       this.getTotalUsersCount(query),
     ]);
@@ -44,7 +46,9 @@ export class UsersQueryRepository {
     });
   }
 
-  async findUserItemsByQueryParams(query: GetUsersQueryParams) {
+  async findUserItemsByQueryParams(
+    query: GetUsersQueryParams,
+  ): Promise<DBUser[]> {
     const {
       sortBy,
       sortDirection,
@@ -70,10 +74,10 @@ export class UsersQueryRepository {
     );
   }
 
-  async getTotalUsersCount(query: GetUsersQueryParams) {
+  async getTotalUsersCount(query: GetUsersQueryParams): Promise<number> {
     const { searchEmailTerm, searchLoginTerm } = query;
 
-    return (
+    const { count } = (
       await this.dataSource.query(
         `
       SELECT COUNT(*)::int FROM "Users" as u
@@ -83,5 +87,7 @@ export class UsersQueryRepository {
         [`%${searchEmailTerm ?? ''}%`, `%${searchLoginTerm ?? ''}%`],
       )
     )[0];
+
+    return count;
   }
 }

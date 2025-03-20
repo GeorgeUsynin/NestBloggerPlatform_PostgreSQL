@@ -1,4 +1,3 @@
-import { UserDocument } from '../../../domain/user.entity';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { DBUser } from '../../../infrastructure/types';
 

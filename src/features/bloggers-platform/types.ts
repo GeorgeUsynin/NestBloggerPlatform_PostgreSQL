@@ -3,3 +3,8 @@ export enum LikeStatus {
   Like = 'Like',
   Dislike = 'Dislike',
 }
+
+export enum ParentType {
+  comment = 'comment',
+  post = 'post',
+}

@@ -24,6 +24,7 @@ export class CreateCommentUseCase
 
   async execute({ dto }: CreateCommentCommand) {
     // Check tah post is exist
+    // @ts-expect-error
     await this.postsRepository.findPostByIdOrNotFoundFail(dto.postId);
 
     // Looking for a user

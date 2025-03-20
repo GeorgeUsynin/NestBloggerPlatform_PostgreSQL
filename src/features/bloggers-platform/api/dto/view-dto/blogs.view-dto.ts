@@ -1,9 +1,8 @@
-import { SchemaTimestampsConfig } from 'mongoose';
-import { BlogDocument } from '../../../domain/blog.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { DBBlog } from 'src/features/bloggers-platform/infrastructure/types';
 
 export class BlogViewDto {
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: Number })
   id: string;
 
   @ApiProperty({ type: String })
@@ -16,7 +15,7 @@ export class BlogViewDto {
   websiteUrl: string;
 
   @ApiProperty({ type: Date })
-  createdAt: SchemaTimestampsConfig['createdAt'];
+  createdAt: Date;
 
   @ApiProperty({
     type: Boolean,
@@ -24,10 +23,10 @@ export class BlogViewDto {
   })
   isMembership: boolean;
 
-  static mapToView(blog: BlogDocument): BlogViewDto {
+  static mapToView(blog: DBBlog): BlogViewDto {
     const dto = new BlogViewDto();
 
-    dto.id = blog._id.toString();
+    dto.id = blog.id.toString();
     dto.description = blog.description;
     dto.name = blog.name;
     dto.websiteUrl = blog.websiteUrl;

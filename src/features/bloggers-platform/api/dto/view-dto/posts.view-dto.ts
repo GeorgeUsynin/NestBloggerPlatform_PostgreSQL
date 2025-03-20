@@ -1,7 +1,7 @@
 import { SchemaTimestampsConfig } from 'mongoose';
-import { PostDocument } from '../../../domain/post.entity';
 import { LikeStatus } from '../../../types';
 import { ApiProperty } from '@nestjs/swagger';
+import { DBPost } from 'src/features/bloggers-platform/infrastructure/types';
 
 class NewestLikesDto {
   @ApiProperty({ type: Date })
@@ -36,7 +36,7 @@ class ExtendedLikesInfoDto {
 }
 
 export class PostViewDto {
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: Number })
   id: string;
 
   @ApiProperty({ type: String })
@@ -55,28 +55,28 @@ export class PostViewDto {
   blogName: string;
 
   @ApiProperty({ type: Date })
-  createdAt: SchemaTimestampsConfig['createdAt'];
+  createdAt: Date;
 
   @ApiProperty({ type: ExtendedLikesInfoDto })
   extendedLikesInfo: ExtendedLikesInfoDto;
 
   static mapToView(
-    post: PostDocument,
+    post: DBPost,
     myStatus: LikeStatus,
     newestLikes: NewestLikesDto[],
   ): PostViewDto {
     const dto = new PostViewDto();
 
-    dto.id = post._id.toString();
-    dto.blogId = post.blogId;
+    dto.id = post.id.toString();
+    dto.blogId = post.blogId.toString();
     dto.blogName = post.blogName;
     dto.content = post.content;
     dto.createdAt = post.createdAt;
     dto.shortDescription = post.shortDescription;
     dto.title = post.title;
     dto.extendedLikesInfo = {
-      dislikesCount: post.likesInfo.dislikesCount,
-      likesCount: post.likesInfo.likesCount,
+      likesCount: 0,
+      dislikesCount: 0,
       myStatus,
       newestLikes,
     };
