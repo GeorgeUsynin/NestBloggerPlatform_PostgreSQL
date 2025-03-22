@@ -1,9 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentsRepository } from '../../../infrastructure/comments.repository';
+import { ForbiddenDomainException } from '../../../../../core/exceptions/domain-exceptions';
 
 export class DeleteCommentCommand {
   constructor(
-    public readonly commentId: string,
+    public readonly commentId: number,
     public readonly userId: number,
   ) {}
 }
@@ -18,9 +19,12 @@ export class DeleteCommentUseCase
     const comment =
       await this.commentsRepository.findCommentByIdOrNotFoundFail(commentId);
 
-    if (comment.isCommentOwner(userId)) {
-      comment.makeDeleted();
-      await this.commentsRepository.save(comment);
+    if (comment.userId === userId) {
+      await this.commentsRepository.deleteCommentById(commentId);
+    } else {
+      throw ForbiddenDomainException.create(
+        'You are not allowed to modify this comment',
+      );
     }
   }
 }

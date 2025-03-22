@@ -1,14 +1,27 @@
-import { SchemaTimestampsConfig } from 'mongoose';
 import { LikeStatus } from '../../../types';
 import { ApiProperty } from '@nestjs/swagger';
-import { DBPost } from 'src/features/bloggers-platform/infrastructure/types';
+import { DBPost } from '../../../infrastructure/types';
 
-class NewestLikesDto {
+class MapViewPostData {
+  id: DBPost['id'];
+  blogId: DBPost['blogId'];
+  blogName: DBPost['blogName'];
+  content: DBPost['content'];
+  createdAt: DBPost['createdAt'];
+  shortDescription: DBPost['shortDescription'];
+  title: DBPost['title'];
+  myStatus: LikeStatus;
+  dislikesCount: number;
+  likesCount: number;
+  newestLikes: NewestLikesDto[];
+}
+
+export class NewestLikesDto {
   @ApiProperty({ type: Date })
-  addedAt: string;
+  addedAt: Date;
 
-  @ApiProperty({ type: Number, nullable: true })
-  userId: number;
+  @ApiProperty({ type: String, nullable: true })
+  userId: string;
 
   @ApiProperty({ type: String, nullable: true })
   login: string;
@@ -60,25 +73,21 @@ export class PostViewDto {
   @ApiProperty({ type: ExtendedLikesInfoDto })
   extendedLikesInfo: ExtendedLikesInfoDto;
 
-  static mapToView(
-    post: DBPost,
-    myStatus: LikeStatus,
-    newestLikes: NewestLikesDto[],
-  ): PostViewDto {
+  static mapToView(postData: MapViewPostData): PostViewDto {
     const dto = new PostViewDto();
 
-    dto.id = post.id.toString();
-    dto.blogId = post.blogId.toString();
-    dto.blogName = post.blogName;
-    dto.content = post.content;
-    dto.createdAt = post.createdAt;
-    dto.shortDescription = post.shortDescription;
-    dto.title = post.title;
+    dto.id = postData.id.toString();
+    dto.blogId = postData.blogId.toString();
+    dto.blogName = postData.blogName;
+    dto.content = postData.content;
+    dto.createdAt = postData.createdAt;
+    dto.shortDescription = postData.shortDescription;
+    dto.title = postData.title;
     dto.extendedLikesInfo = {
-      likesCount: 0,
-      dislikesCount: 0,
-      myStatus,
-      newestLikes,
+      likesCount: postData.likesCount,
+      dislikesCount: postData.dislikesCount,
+      myStatus: postData.myStatus,
+      newestLikes: postData.newestLikes,
     };
 
     return dto;

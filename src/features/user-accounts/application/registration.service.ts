@@ -32,7 +32,7 @@ export class RegistrationService {
       this.usersConfig.CONFIRMATION_CODE_EXPIRATION_TIME_IN_HOURS;
     const expirationDate = add(new Date(), { hours: expirationTimeInHours });
 
-    await this.usersRepository.updateEmailConfirmationSQL(
+    await this.usersRepository.updateEmailConfirmation(
       user.id,
       confirmationCode,
       expirationDate,

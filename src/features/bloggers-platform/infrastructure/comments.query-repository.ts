@@ -1,63 +1,91 @@
-import { DeletionStatus, Post, PostModelType } from '../domain/post.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { CommentViewDto } from '../api/dto/view-dto/comments.view-dto';
 import { GetCommentsQueryParams } from '../api/dto/query-params-dto/get-comments-query-params.input-dto';
-import { FilterQuery } from 'mongoose';
-import { Comment, CommentModelType } from '../domain/comment.entity';
-import { Like, LikeModelType } from '../domain/like.entity';
 import { LikeStatus } from '../types';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
+import { DBComment } from './types';
+
+class DBCommentWithLoginAndMyStatus extends DBComment {
+  userLogin: string;
+  myStatus: LikeStatus;
+}
+
+class CommentsLikesDislikesInfo {
+  likesCount: number;
+  dislikesCount: number;
+}
 
 @Injectable()
 export class CommentsQueryRepository {
-  constructor(
-    @InjectModel(Comment.name)
-    private CommentModel: CommentModelType,
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
-    @InjectModel(Like.name)
-    private LikeModel: LikeModelType,
-  ) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
   async getAllCommentsByPostId(
     query: GetCommentsQueryParams,
-    postId: string,
+    postId: number,
     userId: number | null,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
-    const post = await this.PostModel.findById(postId);
+    const post =
+      (
+        await this.dataSource.query(
+          `
+          SELECT * FROM "Posts"
+          WHERE id = $1 AND "deletedAt" IS NULL;
+        `,
+          [postId],
+        )
+      )[0] ?? null;
 
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw NotFoundDomainException.create('Post not found');
     }
 
-    const filter: FilterQuery<Comment> = {
-      postId,
-      deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
-    };
+    // TODO: Refactor with dynamic query and filter!
+    const [items, totalCount] = await Promise.all([
+      this.findCommentItemsByQueryParams(query),
+      this.getTotalCommentsCount(),
+    ]);
 
-    const items = await this.findCommentItemsByParamsAndFilter(query, filter);
-    const totalCount = await this.getTotalCountOfFilteredComments(filter);
+    const commentsIds = items.map((item) => item.id);
+    const comments: DBCommentWithLoginAndMyStatus[] =
+      await this.dataSource.query(
+        `
+        SELECT
+            c.*, 
+            u."login" AS "userLogin", 
+            COALESCE(l."status", 'None') AS "myStatus"
+        FROM "Comments" as c
+        LEFT JOIN "Users" AS u 
+            ON c."userId" = u."id"
+        LEFT JOIN "Likes" AS l 
+            ON l."parentId" = c."id" 
+            AND l."userId" = $2
+        WHERE c.id = ANY($1) 
+            AND c."deletedAt" IS NULL;
+        `,
+        [commentsIds, userId],
+      );
 
-    const commentsIds = items.map((item) => item._id.toString());
-    const likes = await this.LikeModel.find({
-      parentId: { $in: commentsIds },
-      userId,
-    });
+    const commentLikesDislikes: CommentsLikesDislikesInfo[] =
+      await this.dataSource.query(
+        `
+        SELECT 
+            COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Like')::int, 0) AS "likesCount",
+            COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Dislike')::int, 0) AS "dislikesCount"
+        FROM UNNEST($1::int[]) AS c("id")  -- Разворачиваем список комментариев
+        LEFT JOIN "Likes" l
+        ON l."parentId" = c.id
+        GROUP BY c.id;
+        `,
+        [commentsIds],
+      );
 
     return PaginatedViewDto.mapToView({
-      items: items.map((item) => {
-        let myStatus: LikeStatus = LikeStatus.None;
-
-        if (likes.length > 0) {
-          const like = likes.find(
-            (like) => like.parentId === item._id.toString(),
-          );
-          myStatus = like ? like.status : LikeStatus.None;
-        }
-
-        return CommentViewDto.mapToView(item, myStatus);
-      }),
+      items: comments.map((comment, idx) =>
+        CommentViewDto.mapToView({ ...comment, ...commentLikesDislikes[idx] }),
+      ),
       page: query.pageNumber,
       size: query.pageSize,
       totalCount,
@@ -65,44 +93,79 @@ export class CommentsQueryRepository {
   }
 
   async getByIdOrNotFoundFail(
-    commentId: string,
+    commentId: number,
     userId: number | null,
   ): Promise<CommentViewDto> {
-    const comment = await this.CommentModel.findOne({
-      _id: commentId,
-      deletionStatus: DeletionStatus.NotDeleted,
-    }).exec();
+    const comment: DBCommentWithLoginAndMyStatus | null =
+      (
+        await this.dataSource.query(
+          `
+          SELECT 
+              c.*, 
+              u."login" AS "userLogin", 
+              COALESCE(l."status", 'None') AS "myStatus"
+          FROM "Comments" AS c
+          LEFT JOIN "Users" AS u 
+              ON c."userId" = u.id
+          LEFT JOIN "Likes" AS l 
+              ON l."parentId" = c.id
+              AND l."userId" = $2
+          WHERE c.id = $1 
+              AND c."deletedAt" IS NULL;
+          `,
+          [commentId, userId],
+        )
+      )[0] ?? null;
 
     if (!comment) {
-      throw new NotFoundException('Comment not found');
+      throw NotFoundDomainException.create('Comment not found');
     }
 
-    let myStatus: LikeStatus = LikeStatus.None;
+    const [{ likesCount, dislikesCount }]: [CommentsLikesDislikesInfo] =
+      await this.dataSource.query(
+        `
+        SELECT
+            COALESCE(COUNT(*) FILTER (WHERE status = 'Like')::int, 0) AS "likesCount",
+            COALESCE(COUNT(*) FILTER (WHERE status = 'Dislike')::int, 0) AS "dislikesCount"
+        FROM "Likes"
+        WHERE "parentId" = $1
+        `,
+        [commentId],
+      );
 
-    if (userId) {
-      const like = await this.LikeModel.findOne({
-        parentId: comment._id.toString(),
-        userId,
-      });
-      myStatus = like ? like.status : LikeStatus.None;
-    }
-
-    return CommentViewDto.mapToView(comment, myStatus);
+    return CommentViewDto.mapToView({
+      ...comment,
+      likesCount,
+      dislikesCount,
+    });
   }
 
-  async findCommentItemsByParamsAndFilter(
+  async findCommentItemsByQueryParams(
     query: GetCommentsQueryParams,
-    filter: FilterQuery<Comment>,
-  ) {
+  ): Promise<DBComment[]> {
     const { sortBy, sortDirection, pageSize } = query;
 
-    return this.CommentModel.find(filter)
-      .sort({ [sortBy]: sortDirection })
-      .skip(query.calculateSkip())
-      .limit(pageSize);
+    return this.dataSource.query(
+      `
+      SELECT * FROM "Comments" as c
+      WHERE c."deletedAt" IS NULL
+      ORDER BY c."${sortBy}" ${sortDirection}
+      LIMIT $1 OFFSET $2
+      `,
+      [pageSize, query.calculateSkip()],
+    );
   }
 
-  async getTotalCountOfFilteredComments(filter: FilterQuery<Comment>) {
-    return this.CommentModel.countDocuments(filter);
+  async getTotalCommentsCount(): Promise<number> {
+    const { count } = (
+      await this.dataSource.query(
+        `
+        SELECT COUNT(*)::int FROM "Comments" as c
+        WHERE c."deletedAt" IS NULL;
+        `,
+      )
+    )[0];
+
+    return count;
   }
 }

@@ -29,3 +29,12 @@ export class DBLike {
   parentType: ParentType;
   createdAt: Date;
 }
+
+export class DBComment {
+  id: number;
+  content: string;
+  userId: number;
+  postId: string;
+  createdAt: Date;
+  deletedAt: Date | null;
+}

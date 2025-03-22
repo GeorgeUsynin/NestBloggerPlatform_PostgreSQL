@@ -22,7 +22,6 @@ import { CommentViewDto } from './dto/view-dto/comments.view-dto';
 import { CreateCommentInputDto } from './dto/input-dto/create/comments.input-dto';
 import { UpdateLikeInputDto } from './dto/input-dto/update/likes.input-dto';
 import { CommentsQueryRepository } from '../infrastructure/comments.query-repository';
-import { ObjectIdValidationPipe } from '../../../core/pipes/objectId-validation-pipe';
 import { ExtractUserFromRequest } from '../../user-accounts/guards/decorators/params/ExtractUserFromRequest.decorator';
 import { UserContextDto } from '../../user-accounts/guards/dto/user-context.dto';
 import { JwtHeaderAuthGuard } from '../../user-accounts/guards/bearer/jwt-header-auth.guard';
@@ -37,7 +36,7 @@ import {
 } from './swagger';
 import {
   CreateCommentCommand,
-  UpdateLikePostStatusCommand,
+  UpdatePostLikeStatusCommand,
 } from '../application/use-cases';
 
 @Controller('posts')
@@ -80,7 +79,7 @@ export class PostsController {
   @GetAllCommentsByPostIdApi()
   async getAllCommentsByPostId(
     @Query() query: GetCommentsQueryParams,
-    @Param('postId', ObjectIdValidationPipe) postId: string,
+    @Param('postId', ParseIntPipe) postId: number,
     @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
     const userId = user ? user.id : null;
@@ -98,7 +97,7 @@ export class PostsController {
   @HttpCode(HttpStatus.CREATED)
   @CreateCommentByPostIdApi()
   async createCommentByPostId(
-    @Param('postId', ObjectIdValidationPipe) postId: string,
+    @Param('postId', ParseIntPipe) postId: number,
     @Body() payload: CreateCommentInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<CommentViewDto> {
@@ -122,12 +121,12 @@ export class PostsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UpdatePostLikeStatusApi()
   async updateLikePostById(
-    @Param('id', ObjectIdValidationPipe) postId: string,
+    @Param('id', ParseIntPipe) postId: number,
     @Body() payload: UpdateLikeInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
     return this.commandBus.execute(
-      new UpdateLikePostStatusCommand(postId, user.id, payload),
+      new UpdatePostLikeStatusCommand(postId, user.id, payload),
     );
   }
 }

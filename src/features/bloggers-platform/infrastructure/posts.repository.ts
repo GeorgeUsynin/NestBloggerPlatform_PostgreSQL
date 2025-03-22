@@ -46,9 +46,9 @@ export class PostsRepository {
       (
         await this.dataSource.query(
           `
-    SELECT * FROM "Posts"
-    WHERE id = $1 AND "deletedAt" IS NULL;
-    `,
+        SELECT * FROM "Posts"
+        WHERE id = $1 AND "deletedAt" IS NULL;
+        `,
           [id],
         )
       )[0] ?? null;

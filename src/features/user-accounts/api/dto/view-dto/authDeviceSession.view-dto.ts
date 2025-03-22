@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DBAuthDeviceSession } from 'src/features/user-accounts/infrastructure/types';
+import { DBAuthDeviceSession } from '../../../infrastructure/types';
 
 export class AuthDeviceSessionViewDto {
   @ApiProperty({ type: String })

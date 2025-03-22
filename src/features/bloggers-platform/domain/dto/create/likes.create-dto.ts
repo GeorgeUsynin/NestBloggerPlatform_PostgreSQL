@@ -1,7 +1,7 @@
 import { LikeStatus } from '../../like.entity';
 
 export type CreateLikeDto = {
-  parentId: string;
+  parentId: number;
   userId: number;
   status: LikeStatus;
 };

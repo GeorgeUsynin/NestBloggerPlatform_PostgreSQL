@@ -1,10 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentsRepository } from '../../../infrastructure/comments.repository';
 import { UpdateCommentDto } from '../../../domain/dto/update/comments.update-dto';
+import { ForbiddenDomainException } from '../../../../../core/exceptions/domain-exceptions';
 
 export class UpdateCommentCommand {
   constructor(
-    public readonly commentId: string,
+    public readonly commentId: number,
     public readonly userId: number,
     public readonly dto: UpdateCommentDto,
   ) {}
@@ -20,10 +21,12 @@ export class UpdateCommentUseCase
     const comment =
       await this.commentsRepository.findCommentByIdOrNotFoundFail(commentId);
 
-    if (comment.isCommentOwner(userId)) {
-      comment.update(dto);
-
-      await this.commentsRepository.save(comment);
+    if (comment.userId === userId) {
+      await this.commentsRepository.update(commentId, dto);
+    } else {
+      throw ForbiddenDomainException.create(
+        'You are not allowed to modify this comment',
+      );
     }
   }
 }

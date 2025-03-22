@@ -25,10 +25,10 @@ import {
   UpdateCommentUseCase,
   DeleteCommentUseCase,
   CreateCommentUseCase,
-  UpdateLikeCommentStatusUseCase,
-  UpdateLikePostStatusUseCase,
   UpdatePostByBlogIdAndPostIdUseCase,
   DeletePostByBlogIdAndPostIdUseCase,
+  UpdateLikePostStatusUseCase,
+  UpdateLikeCommentStatusUseCase,
 } from './application/use-cases';
 
 const mongooseModels = [
@@ -53,10 +53,10 @@ const useCases = [
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
-  UpdateLikeCommentStatusUseCase,
-  UpdateLikePostStatusUseCase,
   UpdatePostByBlogIdAndPostIdUseCase,
   DeletePostByBlogIdAndPostIdUseCase,
+  UpdateLikePostStatusUseCase,
+  UpdateLikeCommentStatusUseCase,
 ];
 const repositories = [
   BlogsRepository,

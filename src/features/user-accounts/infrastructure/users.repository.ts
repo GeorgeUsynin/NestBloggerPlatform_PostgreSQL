@@ -1,10 +1,4 @@
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  DeletionStatus,
-  User,
-  UserDocument,
-  UserModelType,
-} from '../domain/user.entity';
+import { UserDocument } from '../domain/user.entity';
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreateUserDto } from '../domain/dto/create/users.create-dto';
@@ -15,27 +9,9 @@ import { DBEmailConfirmation, DBPasswordRecovery, DBUser } from './types';
 @Injectable()
 export class UsersRepository {
   // Injection of the model through DI
-  constructor(
-    @InjectModel(User.name) private UserModel: UserModelType,
-    @InjectDataSource() private dataSource: DataSource,
-  ) {}
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
 
-  async findUserByIdOrNotFoundFail(id: number): Promise<UserDocument> {
-    const user = await this.UserModel.findOne({
-      _id: id,
-      deletionStatus: { $ne: DeletionStatus.PermanentDeleted },
-    });
-
-    if (!user) {
-      throw NotFoundDomainException.create('User not found');
-    }
-
-    return user;
-  }
-
-  // POSTGRESQL
-
-  async findUserByIdSQL(id: number): Promise<DBUser | null> {
+  async findUserById(id: number): Promise<DBUser | null> {
     return (
       await this.dataSource.query(
         `
@@ -45,6 +21,24 @@ export class UsersRepository {
         [id],
       )
     )[0];
+  }
+
+  async findUserByIdOrNotFoundFail(id: number): Promise<DBUser> {
+    const user = (
+      await this.dataSource.query(
+        `
+         SELECT * FROM "Users"
+         WHERE id = $1 AND "deletedAt" IS NULL;
+         `,
+        [id],
+      )
+    )[0];
+
+    if (!user) {
+      throw NotFoundDomainException.create('User not found');
+    }
+
+    return user;
   }
 
   async createUser(dto: CreateUserDto): Promise<DBUser['id']> {
@@ -70,9 +64,7 @@ export class UsersRepository {
     return id;
   }
 
-  async findUserByLoginOrEmailSQL(
-    loginOrEmail: string,
-  ): Promise<DBUser | null> {
+  async findUserByLoginOrEmail(loginOrEmail: string): Promise<DBUser | null> {
     return (
       await this.dataSource.query(
         `
@@ -82,24 +74,6 @@ export class UsersRepository {
         [loginOrEmail],
       )
     )[0];
-  }
-
-  async findUserByIdOrNotFoundFailSQL(id: number): Promise<DBUser> {
-    const user: DBUser = (
-      await this.dataSource.query(
-        `
-         SELECT * FROM "Users"
-         WHERE id = $1 AND "deletedAt" IS NULL;
-         `,
-        [id],
-      )
-    )[0];
-
-    if (!user) {
-      throw NotFoundDomainException.create('User not found');
-    }
-
-    return user;
   }
 
   async updateIsConfirmedByUserId(userId: number, isConfirmed: boolean) {
@@ -190,7 +164,7 @@ export class UsersRepository {
     );
   }
 
-  async findUserByLoginSQL(login: string): Promise<DBUser | null> {
+  async findUserByLogin(login: string): Promise<DBUser | null> {
     const user = (
       await this.dataSource.query(
         `
@@ -204,7 +178,7 @@ export class UsersRepository {
     return user ?? null;
   }
 
-  async findUserByEmailSQL(email: string): Promise<DBUser | null> {
+  async findUserByEmail(email: string): Promise<DBUser | null> {
     const user = (
       await this.dataSource.query(
         `
@@ -218,7 +192,7 @@ export class UsersRepository {
     return user ?? null;
   }
 
-  async updateEmailConfirmationSQL(
+  async updateEmailConfirmation(
     userId: number,
     code: string,
     expirationDate: Date,
@@ -233,7 +207,7 @@ export class UsersRepository {
     );
   }
 
-  async updatePasswordRecoverySQL(
+  async updatePasswordRecovery(
     userId: number,
     code: string,
     expirationDate: Date,

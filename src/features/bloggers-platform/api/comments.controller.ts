@@ -6,13 +6,13 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Put,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CommentsQueryRepository } from '../infrastructure/comments.query-repository';
-import { ObjectIdValidationPipe } from '../../../core/pipes/objectId-validation-pipe';
 import { CommentViewDto } from './dto/view-dto/comments.view-dto';
 import {
   DeleteCommentApi,
@@ -30,7 +30,7 @@ import { UpdateLikeInputDto } from './dto/input-dto/update/likes.input-dto';
 import {
   DeleteCommentCommand,
   UpdateCommentCommand,
-  UpdateLikeCommentStatusCommand,
+  UpdateCommentLikeStatusCommand,
 } from '../application/use-cases';
 
 @Controller('comments')
@@ -45,7 +45,7 @@ export class CommentsController {
   @HttpCode(HttpStatus.OK)
   @GetCommentApi()
   async getCommentById(
-    @Param('id', ObjectIdValidationPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ): Promise<CommentViewDto> {
     const userId = user ? user.id : null;
@@ -59,7 +59,7 @@ export class CommentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UpdateCommentApi()
   async updateCommentById(
-    @Param('id', ObjectIdValidationPipe) commentId: string,
+    @Param('id', ParseIntPipe) commentId: number,
     @Body() payload: UpdateCommentInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
@@ -74,12 +74,12 @@ export class CommentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UpdateCommentLikeStatusApi()
   async updateLikeCommentById(
-    @Param('id', ObjectIdValidationPipe) commentId: string,
+    @Param('id', ParseIntPipe) commentId: number,
     @Body() payload: UpdateLikeInputDto,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
     return this.commandBus.execute(
-      new UpdateLikeCommentStatusCommand(commentId, user.id, payload),
+      new UpdateCommentLikeStatusCommand(commentId, user.id, payload),
     );
   }
 
@@ -89,7 +89,7 @@ export class CommentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @DeleteCommentApi()
   async deleteCommentById(
-    @Param('id', ObjectIdValidationPipe) commentId: string,
+    @Param('id', ParseIntPipe) commentId: number,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
     return this.commandBus.execute(

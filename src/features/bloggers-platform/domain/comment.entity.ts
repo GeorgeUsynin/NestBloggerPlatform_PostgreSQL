@@ -45,7 +45,9 @@ export class Comment extends Likeable {
     const comment = new this(); //this will be a CommentModel when we will call createComment method!
 
     comment.content = dto.content;
+    //@ts-ignore
     comment.commentatorInfo = { userId: dto.userId, userLogin: dto.userLogin };
+    //@ts-ignore
     comment.postId = dto.postId;
 
     return comment as CommentDocument;

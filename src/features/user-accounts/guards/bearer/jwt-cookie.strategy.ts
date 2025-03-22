@@ -45,7 +45,7 @@ export class JwtCookieStrategy extends PassportStrategy(
 
     // Checking if user exists
     const isUserExists = Boolean(
-      await this.usersRepository.findUserByIdSQL(Number(userId)),
+      await this.usersRepository.findUserById(Number(userId)),
     );
 
     if (!isUserExists) {

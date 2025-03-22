@@ -1,9 +1,9 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
-import { PostViewDto } from '../api/dto/view-dto/posts.view-dto';
-import { Like, LikeModelType } from '../domain/like.entity';
-import { User, UserModelType } from '../../user-accounts/domain/user.entity';
+import {
+  NewestLikesDto,
+  PostViewDto,
+} from '../api/dto/view-dto/posts.view-dto';
 import { GetPostsQueryParams } from '../api/dto/query-params-dto/get-posts-query-params.input-dto';
 import { LikeStatus } from '../types';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -11,14 +11,19 @@ import { DataSource } from 'typeorm';
 import { DBPost } from './types';
 import { BlogsRepository } from './blogs.repository';
 
+class DBPostWitMyStatus extends DBPost {
+  myStatus: LikeStatus;
+}
+
+class PostsLikesDislikesInfo {
+  likesCount: number;
+  dislikesCount: number;
+}
+
 @Injectable()
 export class PostsQueryRepository {
   constructor(
     private blogsRepository: BlogsRepository,
-    @InjectModel(Like.name)
-    private LikeModel: LikeModelType,
-    @InjectModel(User.name)
-    private UserModel: UserModelType,
     @InjectDataSource() private dataSource: DataSource,
   ) {}
 
@@ -30,19 +35,52 @@ export class PostsQueryRepository {
     // TODO: Refactor with dynamic query and filter!
     const [items, totalCount] = await Promise.all([
       this.findPostItemsByQueryParams(query, blogId),
-      this.getTotalPostCount(blogId),
+      this.getTotalPostsCount(blogId),
     ]);
 
-    const mappedItems = items.map(async (item) => {
-      const myStatus: LikeStatus = LikeStatus.None;
+    const postsIds = items.map((item) => item.id);
 
-      const newestLikes = [];
+    const posts: DBPostWitMyStatus[] = await this.dataSource.query(
+      `
+        SELECT
+            p.*, 
+            COALESCE(l."status", 'None') AS "myStatus"
+        FROM "Posts" as p
+        LEFT JOIN "Likes" AS l 
+            ON l."parentId" = p."id" 
+            AND l."userId" = $2
+        WHERE p.id = ANY($1) 
+            AND p."deletedAt" IS NULL;
+        `,
+      [postsIds, userId],
+    );
 
-      return PostViewDto.mapToView(item, myStatus, newestLikes);
-    });
+    const postLikesDislikes: PostsLikesDislikesInfo[] =
+      await this.dataSource.query(
+        `
+      SELECT 
+          COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Like')::int, 0) AS "likesCount",
+          COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Dislike')::int, 0) AS "dislikesCount"
+      FROM UNNEST($1::int[]) AS p("id")  -- Разворачиваем список комментариев
+      LEFT JOIN "Likes" l
+      ON l."parentId" = p.id
+      GROUP BY p.id;
+      `,
+        [postsIds],
+      );
+
+    const newestLikes: NewestLikesDto[][] = await Promise.all(
+      postsIds.map(this.getNewestLikes.bind(this)),
+    );
 
     return PaginatedViewDto.mapToView({
-      items: await Promise.all(mappedItems),
+      items: posts.map((post, idx) =>
+        PostViewDto.mapToView({
+          ...post,
+          ...postLikesDislikes[idx],
+          newestLikes: newestLikes[idx],
+        }),
+      ),
       page: query.pageNumber,
       size: query.pageSize,
       totalCount,
@@ -64,34 +102,57 @@ export class PostsQueryRepository {
   }
 
   async getByIdOrNotFoundFail(
-    id: number,
+    postId: number,
     userId: number | null,
   ): Promise<PostViewDto> {
-    const post: DBPost = (
-      await this.dataSource.query(
-        `
-      SELECT * FROM "Posts"
-      WHERE id = $1 AND "deletedAt" IS NULL;
-      `,
-        [id],
-      )
-    )[0];
+    const post: DBPostWitMyStatus =
+      (
+        await this.dataSource.query(
+          `
+          SELECT 
+              p.*, 
+              COALESCE(l."status", 'None') AS "myStatus"
+          FROM "Posts" AS p
+          LEFT JOIN "Likes" AS l 
+              ON l."parentId" = p.id
+              AND l."userId" = $2
+          WHERE p.id = $1 
+              AND p."deletedAt" IS NULL;
+          `,
+          [postId, userId],
+        )
+      )[0] ?? null;
 
     if (!post) {
       throw new NotFoundException('Post not found');
     }
 
-    const myStatus: LikeStatus = LikeStatus.None;
+    const [{ likesCount, dislikesCount }]: [PostsLikesDislikesInfo] =
+      await this.dataSource.query(
+        `
+        SELECT
+            COALESCE(COUNT(*) FILTER (WHERE status = 'Like')::int, 0) AS "likesCount",
+            COALESCE(COUNT(*) FILTER (WHERE status = 'Dislike')::int, 0) AS "dislikesCount"
+        FROM "Likes"
+        WHERE "parentId" = $1
+        `,
+        [postId],
+      );
 
-    const newestLikes = [];
+    const newestLikes = await this.getNewestLikes(postId);
 
-    return PostViewDto.mapToView(post, myStatus, newestLikes);
+    return PostViewDto.mapToView({
+      ...post,
+      likesCount,
+      dislikesCount,
+      newestLikes,
+    });
   }
 
   async findPostItemsByQueryParams(
     query: GetPostsQueryParams,
     blogId?: number,
-  ) {
+  ): Promise<DBPost[]> {
     const { sortBy, sortDirection, pageSize } = query;
 
     if (blogId) {
@@ -118,7 +179,7 @@ export class PostsQueryRepository {
     }
   }
 
-  async getTotalPostCount(blogId?: number) {
+  async getTotalPostsCount(blogId?: number): Promise<number> {
     if (blogId) {
       const { count } = (
         await this.dataSource.query(
@@ -147,25 +208,21 @@ export class PostsQueryRepository {
   }
 
   private async getNewestLikes(postId: number) {
-    const newestLikesRaw = await this.LikeModel.find({
-      parentId: postId,
-      status: LikeStatus.Like,
-    })
-      .sort({ createdAt: -1 })
-      .limit(3);
-
-    const likesUsersIds = newestLikesRaw.map((like) => like.userId);
-    const users = await this.UserModel.find({ _id: { $in: likesUsersIds } });
-
-    const newestLikes = newestLikesRaw.map((like) => {
-      const user = users.find((user) => user.id === like.userId);
-      return {
-        addedAt: like.createdAt as string,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-        login: user?.login!,
-        userId: like.userId,
-      };
-    });
+    const newestLikes: NewestLikesDto[] = await this.dataSource.query(
+      `
+      SELECT
+          l."createdAt" AS "addedAt",
+          u.login,
+          l."userId"::TEXT AS "userId"
+      FROM "Likes" AS l
+      LEFT JOIN "Users" AS u
+      ON l."userId" = u.id
+      WHERE "parentId" = $1 AND status = $2
+      ORDER BY l."createdAt" DESC
+      LIMIT 3
+      `,
+      [postId, LikeStatus.Like],
+    );
 
     return newestLikes;
   }

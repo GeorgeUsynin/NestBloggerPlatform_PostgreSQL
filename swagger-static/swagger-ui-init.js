@@ -2271,7 +2271,7 @@ window.onload = function() {
               "type": "string"
             },
             "userId": {
-              "type": "number",
+              "type": "string",
               "nullable": true
             },
             "login": {

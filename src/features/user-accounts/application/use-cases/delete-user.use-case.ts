@@ -12,7 +12,7 @@ export class DeleteUserUseCase
   constructor(private usersRepository: UsersRepository) {}
 
   async execute({ userId }: DeleteUserCommand) {
-    await this.usersRepository.findUserByIdOrNotFoundFailSQL(userId);
+    await this.usersRepository.findUserByIdOrNotFoundFail(userId);
 
     await this.usersRepository.deleteUserById(userId);
   }

@@ -7,7 +7,7 @@ export class AuthQueryRepository {
   constructor(private usersRepository: UsersRepository) {}
 
   async me(id: number): Promise<MeViewDto> {
-    const user = await this.usersRepository.findUserByIdOrNotFoundFailSQL(id);
+    const user = await this.usersRepository.findUserByIdOrNotFoundFail(id);
 
     return MeViewDto.mapToView(user);
   }

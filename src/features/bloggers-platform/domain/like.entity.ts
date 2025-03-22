@@ -20,17 +20,6 @@ export class Like {
   @Prop({ type: String, enum: LikeStatus, required: true })
   status: LikeStatus;
 
-  static createLike(dto: CreateLikeDto): LikeDocument {
-    // LikeDocument!
-    const like = new this(); //this will be a LikeModel when we will call createLike method!
-
-    like.userId = dto.userId;
-    like.parentId = dto.parentId;
-    like.status = dto.status;
-
-    return like as LikeDocument;
-  }
-
   update(dto: UpdateLikeDto) {
     this.status = dto.likeStatus;
   }

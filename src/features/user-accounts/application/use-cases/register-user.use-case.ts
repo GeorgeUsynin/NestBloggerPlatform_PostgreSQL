@@ -23,8 +23,8 @@ export class RegisterUserUseCase
     const { login, email } = dto;
 
     // check if user already exists
-    const userWithLogin = await this.usersRepository.findUserByLoginSQL(login);
-    const userWithEmail = await this.usersRepository.findUserByEmailSQL(email);
+    const userWithLogin = await this.usersRepository.findUserByLogin(login);
+    const userWithEmail = await this.usersRepository.findUserByEmail(email);
 
     if (userWithLogin || userWithEmail) {
       const message = `User with this ${userWithLogin ? 'login' : 'email'} already exists`;
@@ -39,7 +39,7 @@ export class RegisterUserUseCase
     >(new CreateUserCommand(dto, true));
 
     const newUser =
-      await this.usersRepository.findUserByIdOrNotFoundFailSQL(createdUserId);
+      await this.usersRepository.findUserByIdOrNotFoundFail(createdUserId);
 
     const usersEmailConfirmation =
       await this.usersRepository.findEmailConfirmationByUserId(createdUserId);

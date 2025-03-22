@@ -17,7 +17,7 @@ export class RegistrationEmailResendingUseCase
   ) {}
 
   async execute({ email }: RegistrationEmailResendingCommand) {
-    const user = await this.usersRepository.findUserByEmailSQL(email);
+    const user = await this.usersRepository.findUserByEmail(email);
 
     if (!user) {
       throw BadRequestDomainException.create(

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DBBlog } from 'src/features/bloggers-platform/infrastructure/types';
+import { DBBlog } from '../../../infrastructure/types';
 
 export class BlogViewDto {
   @ApiProperty({ type: Number })
