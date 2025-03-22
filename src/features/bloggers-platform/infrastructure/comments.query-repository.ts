@@ -6,7 +6,7 @@ import { LikeStatus } from '../types';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
-import { DBComment } from './types';
+import { DBComment, DBPost } from './types';
 
 class DBCommentWithLoginAndMyStatus extends DBComment {
   userLogin: string;
@@ -27,7 +27,7 @@ export class CommentsQueryRepository {
     postId: number,
     userId: number | null,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
-    const post =
+    const post: DBPost | null =
       (
         await this.dataSource.query(
           `
@@ -44,8 +44,8 @@ export class CommentsQueryRepository {
 
     // TODO: Refactor with dynamic query and filter!
     const [items, totalCount] = await Promise.all([
-      this.findCommentItemsByQueryParams(query),
-      this.getTotalCommentsCount(),
+      this.findCommentItemsByQueryParams(query, post.id),
+      this.getTotalCommentsCount(post.id),
     ]);
 
     const commentsIds = items.map((item) => item.id);
@@ -144,27 +144,29 @@ export class CommentsQueryRepository {
 
   async findCommentItemsByQueryParams(
     query: GetCommentsQueryParams,
+    postId: number,
   ): Promise<DBComment[]> {
     const { sortBy, sortDirection, pageSize } = query;
 
     return this.dataSource.query(
       `
       SELECT * FROM "Comments" as c
-      WHERE c."deletedAt" IS NULL
+      WHERE c."postId" = $1 AND c."deletedAt" IS NULL
       ORDER BY c."${sortBy}" ${sortDirection}
-      LIMIT $1 OFFSET $2
+      LIMIT $2 OFFSET $3
       `,
-      [pageSize, query.calculateSkip()],
+      [postId, pageSize, query.calculateSkip()],
     );
   }
 
-  async getTotalCommentsCount(): Promise<number> {
+  async getTotalCommentsCount(postId: number): Promise<number> {
     const { count } = (
       await this.dataSource.query(
         `
         SELECT COUNT(*)::int FROM "Comments" as c
-        WHERE c."deletedAt" IS NULL;
+        WHERE c."postId" = $1 AND c."deletedAt" IS NULL;
         `,
+        [postId],
       )
     )[0];
 
