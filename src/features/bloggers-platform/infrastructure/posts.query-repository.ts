@@ -50,7 +50,8 @@ export class PostsQueryRepository {
             ON l."parentId" = p."id" 
             AND l."userId" = $2
         WHERE p.id = ANY($1) 
-            AND p."deletedAt" IS NULL;
+            AND p."deletedAt" IS NULL
+        ORDER BY array_position($1, p.id);
         `,
       [postsIds, userId],
     );
@@ -64,7 +65,8 @@ export class PostsQueryRepository {
       FROM UNNEST($1::int[]) AS p("id")  -- Разворачиваем список комментариев
       LEFT JOIN "Likes" l
       ON l."parentId" = p.id
-      GROUP BY p.id;
+      GROUP BY p.id
+      ORDER BY array_position($1, p.id);
       `,
         [postsIds],
       );
@@ -212,8 +214,8 @@ export class PostsQueryRepository {
       `
       SELECT
           l."createdAt" AS "addedAt",
-          u.login,
-          l."userId"::TEXT AS "userId"
+          l."userId"::TEXT AS "userId",
+          u.login
       FROM "Likes" AS l
       LEFT JOIN "Users" AS u
       ON l."userId" = u.id

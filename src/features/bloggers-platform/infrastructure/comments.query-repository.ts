@@ -63,7 +63,8 @@ export class CommentsQueryRepository {
             ON l."parentId" = c."id" 
             AND l."userId" = $2
         WHERE c.id = ANY($1) 
-            AND c."deletedAt" IS NULL;
+            AND c."deletedAt" IS NULL
+        ORDER BY array_position($1, c.id);
         `,
         [commentsIds, userId],
       );
@@ -77,7 +78,8 @@ export class CommentsQueryRepository {
         FROM UNNEST($1::int[]) AS c("id")  -- Разворачиваем список комментариев
         LEFT JOIN "Likes" l
         ON l."parentId" = c.id
-        GROUP BY c.id;
+        GROUP BY c.id
+        ORDER BY array_position($1, c.id);
         `,
         [commentsIds],
       );
