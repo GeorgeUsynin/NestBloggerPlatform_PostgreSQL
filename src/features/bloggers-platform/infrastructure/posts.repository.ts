@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PostDocument } from '../domain/post.entity';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreatePostDto } from '../domain/dto/create/posts.create-dto';
 import { DBPost } from './types';
@@ -10,13 +9,6 @@ import { UpdatePostDto } from '../domain/dto/update/posts.update-dto';
 @Injectable()
 export class PostsRepository {
   constructor(@InjectDataSource() private dataSource: DataSource) {}
-
-  // TODO: remove after migration to SQL
-  async save(post: PostDocument) {
-    return post.save();
-  }
-
-  // POSTGRES
 
   async createPost(dto: CreatePostDto): Promise<DBPost['id']> {
     const { blogId, blogName, content, shortDescription, title } = dto;

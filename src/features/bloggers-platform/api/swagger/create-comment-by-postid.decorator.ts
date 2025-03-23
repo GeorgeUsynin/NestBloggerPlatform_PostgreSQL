@@ -11,14 +11,14 @@ import {
 } from '@nestjs/swagger';
 import { SwaggerErrorsMessagesViewDto } from '../../../../core/dto/swagger-errors-messages.view-dto';
 import { CreateCommentInputDto } from '../dto/input-dto/create/comments.input-dto';
-import { contentConstraints } from '../../domain/comment.entity';
+import { commentContentConstraints } from '../dto/constraints';
 import { CommentViewDto } from '../dto/view-dto/comments.view-dto';
 
 export class SwaggerCreateCommentInputDto implements CreateCommentInputDto {
   @ApiProperty({
     type: String,
-    minLength: contentConstraints.minLength,
-    maxLength: contentConstraints.maxLength,
+    minLength: commentContentConstraints.minLength,
+    maxLength: commentContentConstraints.maxLength,
   })
   content: string;
 }

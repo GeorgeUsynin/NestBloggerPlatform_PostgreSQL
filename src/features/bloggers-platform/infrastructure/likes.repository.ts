@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { LikeDocument } from '../domain/like.entity';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { DBLike } from './types';
@@ -53,10 +52,5 @@ export class LikesRepository {
         `,
       [likeStatus, likeId],
     );
-  }
-
-  // TODO: remove save
-  async save(likeDocument: LikeDocument) {
-    return likeDocument.save();
   }
 }

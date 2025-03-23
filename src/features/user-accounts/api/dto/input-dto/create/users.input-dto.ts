@@ -8,7 +8,7 @@ import {
   emailConstraints,
   loginConstraints,
   passwordConstraints,
-} from '../../../../domain/user.entity';
+} from '../../constraints';
 
 export class CreateUserInputDto implements CreateUserDto {
   // Call order: @IsStringWithTrim() -> @MatchesWithMessage() -> @LengthWithMessage()

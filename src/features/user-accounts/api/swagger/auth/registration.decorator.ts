@@ -13,7 +13,7 @@ import {
   emailConstraints,
   loginConstraints,
   passwordConstraints,
-} from '../../../domain/user.entity';
+} from '../../dto/constraints';
 
 export class SwaggerCreateUserInputDto implements CreateUserInputDto {
   @ApiProperty({

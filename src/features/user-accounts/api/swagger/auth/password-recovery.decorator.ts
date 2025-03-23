@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { SwaggerErrorsMessagesViewDto } from '../../../../../core/dto/swagger-errors-messages.view-dto';
 import { PasswordRecoveryInputDto } from '../../dto/input-dto/password-recovery.input-dto';
-import { emailConstraints } from '../../../domain/user.entity';
+import { emailConstraints } from '../../dto/constraints';
 
 class SwaggerPasswordRecoveryInputDto implements PasswordRecoveryInputDto {
   @ApiProperty({

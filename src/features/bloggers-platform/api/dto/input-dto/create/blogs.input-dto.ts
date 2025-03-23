@@ -3,12 +3,12 @@ import {
   MaxLengthWithMessage,
   IsStringWithTrim,
 } from '../../../../../../core/decorators/validation';
-import {
-  descriptionConstraints,
-  nameConstraints,
-  websiteUrlConstraints,
-} from '../../../../domain/blog.entity';
 import { CreateBlogDto } from '../../../../domain/dto/create/blogs.create-dto';
+import {
+  nameConstraints,
+  descriptionConstraints,
+  websiteUrlConstraints,
+} from '../../constraints';
 
 export class CreateBlogInputDto implements CreateBlogDto {
   @MaxLengthWithMessage(nameConstraints.maxLength)

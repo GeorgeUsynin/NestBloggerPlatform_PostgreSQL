@@ -1,4 +1,3 @@
-import { UserDocument } from '../domain/user.entity';
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreateUserDto } from '../domain/dto/create/users.create-dto';

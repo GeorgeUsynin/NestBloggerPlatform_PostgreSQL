@@ -13,7 +13,7 @@ import {
   descriptionConstraints,
   nameConstraints,
   websiteUrlConstraints,
-} from '../../domain/blog.entity';
+} from '../dto/constraints';
 import { BlogViewDto } from '../dto/view-dto/blogs.view-dto';
 
 export class SwaggerCreateBlogInputDto implements CreateBlogInputDto {

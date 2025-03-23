@@ -10,15 +10,15 @@ import {
   ApiProperty,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { contentConstraints } from '../../domain/comment.entity';
+import { commentContentConstraints } from '../dto/constraints';
 import { SwaggerErrorsMessagesViewDto } from '../../../../core/dto/swagger-errors-messages.view-dto';
 import { UpdateCommentInputDto } from '../dto/input-dto/update/comments.input-dto';
 
 export class SwaggerUpdateCommentInputDto implements UpdateCommentInputDto {
   @ApiProperty({
     type: String,
-    minLength: contentConstraints.minLength,
-    maxLength: contentConstraints.maxLength,
+    minLength: commentContentConstraints.minLength,
+    maxLength: commentContentConstraints.maxLength,
   })
   content: string;
 }

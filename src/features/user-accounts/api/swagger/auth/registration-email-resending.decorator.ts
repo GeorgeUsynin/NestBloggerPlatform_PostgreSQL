@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { SwaggerErrorsMessagesViewDto } from '../../../../../core/dto/swagger-errors-messages.view-dto';
 import { RegistrationEmailResendingInputDto } from '../../dto/input-dto/registration-email-resending.input-dto';
-import { emailConstraints } from '../../../domain/user.entity';
+import { emailConstraints } from '../../dto/constraints';
 
 class SwaggerRegistrationEmailResendingInputDto
   implements RegistrationEmailResendingInputDto

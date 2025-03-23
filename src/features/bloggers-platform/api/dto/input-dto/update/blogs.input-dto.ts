@@ -4,11 +4,19 @@ import {
   MaxLengthWithMessage,
   IsStringWithTrim,
 } from '../../../../../../core/decorators/validation';
-import {
-  descriptionConstraints,
-  nameConstraints,
-  websiteUrlConstraints,
-} from '../../../../domain/blog.entity';
+
+const websiteUrlConstraints = {
+  maxLength: 100,
+  match: /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/,
+};
+
+const nameConstraints = {
+  maxLength: 15,
+};
+
+const descriptionConstraints = {
+  maxLength: 500,
+};
 
 export class UpdateBlogInputDto implements UpdateBlogDto {
   @MaxLengthWithMessage(nameConstraints.maxLength)

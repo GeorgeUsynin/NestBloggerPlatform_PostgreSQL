@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { UsersController } from './api/users.controller';
-import { UserSchema, User } from './domain/user.entity';
 import { UsersRepository } from './infrastructure/users.repository';
 import { UsersQueryRepository } from './infrastructure/query/users.query-repository';
 import { AuthDeviceSessionsRepository } from './infrastructure/authDeviceSessions.repository';
@@ -36,7 +34,6 @@ import {
 } from './application/use-cases';
 import { SecurityDevicesController } from './api/securityDevices.controller';
 
-const mongooseModels = [{ name: User.name, schema: UserSchema }];
 const useCases = [
   CreateUserUseCase,
   DeleteUserUseCase,
@@ -62,7 +59,7 @@ const services = [AuthService, CryptoService, RegistrationService];
 
 @Module({
   // This will allow injecting the UserModel into the providers in this module
-  imports: [MongooseModule.forFeature(mongooseModels), JwtModule],
+  imports: [JwtModule],
   controllers: [AuthController, UsersController, SecurityDevicesController],
   providers: [
     {
@@ -97,8 +94,6 @@ const services = [AuthService, CryptoService, RegistrationService];
     ...strategies,
     ...useCases,
   ],
-  exports: [MongooseModule, UsersRepository, UserAccountsConfig],
-  /* We re-export the MongooseModule if we want the models registered here to be injectable 
-  into the services of other modules that import this module */
+  exports: [UsersRepository, UserAccountsConfig],
 })
 export class UsersAccountsModule {}

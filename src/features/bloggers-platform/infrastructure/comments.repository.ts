@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CommentDocument } from '../domain/comment.entity';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreateCommentDto } from '../domain/dto/create/comments.create-dto';
 import { DBComment } from './types';
@@ -69,10 +68,5 @@ export class CommentsRepository {
       `,
       [content, commentId],
     );
-  }
-
-  // TODO: remove save
-  async save(comment: CommentDocument) {
-    return comment.save();
   }
 }

@@ -12,10 +12,10 @@ import { SwaggerErrorsMessagesViewDto } from '../../../../core/dto/swagger-error
 import { PostViewDto } from '../dto/view-dto/posts.view-dto';
 import { CreatePostInputDto } from '../dto/input-dto/create/posts.input-dto';
 import {
-  contentConstraints,
+  postContentConstraints,
   shortDescriptionConstraints,
   titleConstraints,
-} from '../../domain/post.entity';
+} from '../dto/constraints';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SwaggerCreatePostInputDto implements CreatePostInputDto {
@@ -33,7 +33,7 @@ export class SwaggerCreatePostInputDto implements CreatePostInputDto {
 
   @ApiProperty({
     type: String,
-    maxLength: contentConstraints.maxLength,
+    maxLength: postContentConstraints.maxLength,
   })
   content: string;
 }

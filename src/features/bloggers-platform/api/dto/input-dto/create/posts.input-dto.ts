@@ -1,14 +1,13 @@
-import { OmitType } from '@nestjs/swagger';
-import {
-  contentConstraints,
-  shortDescriptionConstraints,
-  titleConstraints,
-} from '../../../../domain/post.entity';
 import {
   MaxLengthWithMessage,
   IsStringWithTrim,
 } from '../../../../../../core/decorators/validation';
 import { CreatePostDto } from '../../../../application/dto/create/posts.create-dto';
+import {
+  titleConstraints,
+  shortDescriptionConstraints,
+  postContentConstraints,
+} from '../../constraints';
 
 export class CreatePostInputDto implements CreatePostDto {
   @MaxLengthWithMessage(titleConstraints.maxLength)
@@ -19,7 +18,7 @@ export class CreatePostInputDto implements CreatePostDto {
   @IsStringWithTrim()
   shortDescription: string;
 
-  @MaxLengthWithMessage(contentConstraints.maxLength)
+  @MaxLengthWithMessage(postContentConstraints.maxLength)
   @IsStringWithTrim()
   content: string;
 }

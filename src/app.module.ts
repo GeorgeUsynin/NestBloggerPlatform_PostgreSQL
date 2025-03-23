@@ -2,7 +2,6 @@
 import { configModule } from './config-module';
 
 import { DynamicModule, Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { UsersAccountsModule } from './features/user-accounts/usersAccounts.module';
@@ -44,14 +43,6 @@ import { CqrsModule } from '@nestjs/cqrs';
         // username: 'nodejs',
         // password: 'nodejs',
         // database: 'BloggersPlatform',
-      }),
-      inject: [CoreConfig],
-    }),
-    // Connect to MongoDB
-    MongooseModule.forRootAsync({
-      useFactory: (coreConfig: CoreConfig) => ({
-        uri: coreConfig.MONGO_URL,
-        dbName: coreConfig.DB_NAME,
       }),
       inject: [CoreConfig],
     }),

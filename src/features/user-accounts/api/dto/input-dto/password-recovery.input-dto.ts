@@ -2,7 +2,7 @@ import {
   IsStringWithTrim,
   MatchesWithMessage,
 } from '../../../../../core/decorators/validation';
-import { emailConstraints } from '../../../domain/user.entity';
+import { emailConstraints } from '../constraints';
 
 export class PasswordRecoveryInputDto {
   @MatchesWithMessage(emailConstraints.match)

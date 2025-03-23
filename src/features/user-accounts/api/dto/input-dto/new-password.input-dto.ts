@@ -2,7 +2,7 @@ import {
   IsStringWithTrim,
   LengthWithMessage,
 } from '../../../../../core/decorators/validation';
-import { passwordConstraints } from '../../../domain/user.entity';
+import { passwordConstraints } from '../constraints';
 
 export class NewPasswordInputDto {
   @LengthWithMessage(

@@ -1,12 +1,15 @@
-import { contentConstraints } from '../../../../domain/comment.entity';
 import { UpdateCommentDto } from '../../../../domain/dto/update/comments.update-dto';
 import {
   LengthWithMessage,
   IsStringWithTrim,
 } from '../../../../../../core/decorators/validation';
+import { commentContentConstraints } from '../../constraints';
 
 export class UpdateCommentInputDto implements UpdateCommentDto {
-  @LengthWithMessage(contentConstraints.minLength, contentConstraints.maxLength)
+  @LengthWithMessage(
+    commentContentConstraints.minLength,
+    commentContentConstraints.maxLength,
+  )
   @IsStringWithTrim()
   content: string;
 }

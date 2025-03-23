@@ -1,9 +1,9 @@
 import { UpdatePostDto } from '../../../../domain/dto/update/posts.update-dto';
 import {
-  contentConstraints,
+  postContentConstraints,
   shortDescriptionConstraints,
   titleConstraints,
-} from '../../../../domain/post.entity';
+} from '../../constraints';
 import {
   MaxLengthWithMessage,
   IsStringWithTrim,
@@ -18,7 +18,7 @@ export class UpdatePostInputDto implements UpdatePostDto {
   @IsStringWithTrim()
   shortDescription: string;
 
-  @MaxLengthWithMessage(contentConstraints.maxLength)
+  @MaxLengthWithMessage(postContentConstraints.maxLength)
   @IsStringWithTrim()
   content: string;
 }
