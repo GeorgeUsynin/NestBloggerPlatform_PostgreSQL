@@ -32,6 +32,7 @@ import {
   UpdateCommentCommand,
   UpdateCommentLikeStatusCommand,
 } from '../application/use-cases';
+import { ParentType } from '../types';
 
 @Controller('comments')
 export class CommentsController {
@@ -79,7 +80,12 @@ export class CommentsController {
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
     return this.commandBus.execute(
-      new UpdateCommentLikeStatusCommand(commentId, user.id, payload),
+      new UpdateCommentLikeStatusCommand(
+        commentId,
+        user.id,
+        ParentType.comment,
+        payload,
+      ),
     );
   }
 

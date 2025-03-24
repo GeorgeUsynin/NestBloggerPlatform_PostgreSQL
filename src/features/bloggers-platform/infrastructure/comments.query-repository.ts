@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { CommentViewDto } from '../api/dto/view-dto/comments.view-dto';
 import { GetCommentsQueryParams } from '../api/dto/query-params-dto/get-comments-query-params.input-dto';
-import { LikeStatus } from '../types';
+import { LikeStatus, ParentType } from '../types';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
@@ -60,13 +60,14 @@ export class CommentsQueryRepository {
         LEFT JOIN "Users" AS u 
             ON c."userId" = u."id"
         LEFT JOIN "Likes" AS l 
-            ON l."parentId" = c."id" 
+            ON l."parentId" = c."id"
+            AND l."parentType" = $3
             AND l."userId" = $2
         WHERE c.id = ANY($1) 
             AND c."deletedAt" IS NULL
         ORDER BY array_position($1, c.id);
         `,
-        [commentsIds, userId],
+        [commentsIds, userId, ParentType.comment],
       );
 
     const commentLikesDislikes: CommentsLikesDislikesInfo[] =
@@ -77,11 +78,11 @@ export class CommentsQueryRepository {
             COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Dislike')::int, 0) AS "dislikesCount"
         FROM UNNEST($1::int[]) AS c("id")  -- Разворачиваем список комментариев
         LEFT JOIN "Likes" l
-        ON l."parentId" = c.id
+        ON l."parentId" = c.id AND l."parentType" = $2
         GROUP BY c.id
         ORDER BY array_position($1, c.id);
         `,
-        [commentsIds],
+        [commentsIds, ParentType.comment],
       );
 
     return PaginatedViewDto.mapToView({
@@ -111,11 +112,12 @@ export class CommentsQueryRepository {
               ON c."userId" = u.id
           LEFT JOIN "Likes" AS l 
               ON l."parentId" = c.id
+              AND l."parentType" = $3
               AND l."userId" = $2
           WHERE c.id = $1 
               AND c."deletedAt" IS NULL;
           `,
-          [commentId, userId],
+          [commentId, userId, ParentType.comment],
         )
       )[0] ?? null;
 
@@ -131,8 +133,9 @@ export class CommentsQueryRepository {
             COALESCE(COUNT(*) FILTER (WHERE status = 'Dislike')::int, 0) AS "dislikesCount"
         FROM "Likes"
         WHERE "parentId" = $1
+            AND "parentType" = $2
         `,
-        [commentId],
+        [commentId, ParentType.comment],
       );
 
     return CommentViewDto.mapToView({

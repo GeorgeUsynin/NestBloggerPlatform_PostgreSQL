@@ -38,6 +38,7 @@ import {
   CreateCommentCommand,
   UpdatePostLikeStatusCommand,
 } from '../application/use-cases';
+import { ParentType } from '../types';
 
 @Controller('posts')
 export class PostsController {
@@ -126,7 +127,12 @@ export class PostsController {
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<void> {
     return this.commandBus.execute(
-      new UpdatePostLikeStatusCommand(postId, user.id, payload),
+      new UpdatePostLikeStatusCommand(
+        postId,
+        user.id,
+        ParentType.post,
+        payload,
+      ),
     );
   }
 }

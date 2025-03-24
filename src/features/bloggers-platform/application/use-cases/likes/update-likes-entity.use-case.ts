@@ -1,11 +1,12 @@
 import { UpdateLikeDto } from '../../../domain/dto/update/likes.update-dto';
 import { LikesRepository } from '../../../infrastructure/likes.repository';
-import { LikeStatus } from '../../../types';
+import { LikeStatus, ParentType } from '../../../types';
 
 export class UpdateLikeStatusCommand {
   constructor(
     public readonly entityId: number,
     public readonly userId: number,
+    public readonly entityType: ParentType,
     public readonly dto: UpdateLikeDto,
   ) {}
 }
@@ -14,7 +15,7 @@ export abstract class UpdateLikesUseCase<T> {
   constructor(private likesRepository: LikesRepository) {}
 
   async execute(command: UpdateLikeStatusCommand) {
-    const { dto, entityId, userId } = command;
+    const { dto, entityId, userId, entityType } = command;
 
     await this.checkThatLikableEntityExists(entityId);
 
@@ -37,6 +38,7 @@ export abstract class UpdateLikesUseCase<T> {
         parentId: entityId,
         userId,
         status: likeStatus,
+        parentType: entityType,
       });
 
       return;

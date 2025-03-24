@@ -5,7 +5,7 @@ import {
   PostViewDto,
 } from '../api/dto/view-dto/posts.view-dto';
 import { GetPostsQueryParams } from '../api/dto/query-params-dto/get-posts-query-params.input-dto';
-import { LikeStatus } from '../types';
+import { LikeStatus, ParentType } from '../types';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { DBPost } from './types';
@@ -47,13 +47,14 @@ export class PostsQueryRepository {
             COALESCE(l."status", 'None') AS "myStatus"
         FROM "Posts" as p
         LEFT JOIN "Likes" AS l 
-            ON l."parentId" = p."id" 
+            ON l."parentId" = p."id"
+            AND l."parentType" = $3
             AND l."userId" = $2
         WHERE p.id = ANY($1) 
             AND p."deletedAt" IS NULL
         ORDER BY array_position($1, p.id);
         `,
-      [postsIds, userId],
+      [postsIds, userId, ParentType.post],
     );
 
     const postLikesDislikes: PostsLikesDislikesInfo[] =
@@ -64,11 +65,11 @@ export class PostsQueryRepository {
           COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Dislike')::int, 0) AS "dislikesCount"
       FROM UNNEST($1::int[]) AS p("id")  -- Разворачиваем список комментариев
       LEFT JOIN "Likes" l
-      ON l."parentId" = p.id
+      ON l."parentId" = p.id AND l."parentType" = $2
       GROUP BY p.id
       ORDER BY array_position($1, p.id);
       `,
-        [postsIds],
+        [postsIds, ParentType.post],
       );
 
     const newestLikes: NewestLikesDto[][] = await Promise.all(
@@ -117,11 +118,12 @@ export class PostsQueryRepository {
           FROM "Posts" AS p
           LEFT JOIN "Likes" AS l 
               ON l."parentId" = p.id
+              AND l."parentType" = $3
               AND l."userId" = $2
-          WHERE p.id = $1 
-              AND p."deletedAt" IS NULL;
+          WHERE p.id = $1
+              AND p."deletedAt" IS NULL
           `,
-          [postId, userId],
+          [postId, userId, ParentType.post],
         )
       )[0] ?? null;
 
@@ -137,8 +139,9 @@ export class PostsQueryRepository {
             COALESCE(COUNT(*) FILTER (WHERE status = 'Dislike')::int, 0) AS "dislikesCount"
         FROM "Likes"
         WHERE "parentId" = $1
+            AND "parentType" = $2
         `,
-        [postId],
+        [postId, ParentType.post],
       );
 
     const newestLikes = await this.getNewestLikes(postId);

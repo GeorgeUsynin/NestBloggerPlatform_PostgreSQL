@@ -15,15 +15,15 @@ export class LikesRepository {
   constructor(@InjectDataSource() private dataSource: DataSource) {}
 
   async createLike(dto: CreateLikeDto) {
-    const { parentId, status, userId } = dto;
+    const { parentId, status, userId, parentType } = dto;
 
     return this.dataSource.query(
       `
       INSERT INTO "Likes"
-      ("userId", "parentId", status)
-      VALUES($1, $2, $3)
+      ("userId", "parentId", status, "parentType")
+      VALUES($1, $2, $3, $4)
       `,
-      [userId, parentId, status],
+      [userId, parentId, status, parentType],
     );
   }
 
