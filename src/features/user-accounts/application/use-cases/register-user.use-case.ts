@@ -1,12 +1,12 @@
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { CreateUserDto } from '../../domain/dto/create/users.create-dto';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { BadRequestDomainException } from '../../../../core/exceptions/domain-exceptions';
 import { CreateUserCommand } from './create-user.use-case';
 import { RegistrationService } from '../registration.service';
+import { CreateUserInputDto } from '../../api/dto/input-dto/create/users.input-dto';
 
 export class RegisterUserCommand {
-  constructor(public readonly dto: CreateUserDto) {}
+  constructor(public readonly dto: CreateUserInputDto) {}
 }
 
 @CommandHandler(RegisterUserCommand)
@@ -36,7 +36,7 @@ export class RegisterUserUseCase
     const createdUserId = await this.commandBus.execute<
       CreateUserCommand,
       number
-    >(new CreateUserCommand(dto, true));
+    >(new CreateUserCommand(dto));
 
     const newUser =
       await this.usersRepository.findUserByIdOrNotFoundFail(createdUserId);

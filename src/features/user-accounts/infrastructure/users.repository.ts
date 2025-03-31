@@ -1,37 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreateUserDto } from '../domain/dto/create/users.create-dto';
-import { DataSource } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DBEmailConfirmation, DBPasswordRecovery, DBUser } from './types';
+import { User } from '../domain/user.entity';
 
 @Injectable()
 export class UsersRepository {
   // Injection of the model through DI
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    // TODO: remove datasource
+    @InjectDataSource() private dataSource: DataSource,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
-  async findUserById(id: number): Promise<DBUser | null> {
-    return (
-      await this.dataSource.query(
-        `
-         SELECT * FROM "Users"
-         WHERE id = $1 AND "deletedAt" IS NULL;
-         `,
-        [id],
-      )
-    )[0];
+  create(dto: CreateUserDto) {
+    return this.usersRepository.create(dto);
   }
 
-  async findUserByIdOrNotFoundFail(id: number): Promise<DBUser> {
-    const user = (
-      await this.dataSource.query(
-        `
-         SELECT * FROM "Users"
-         WHERE id = $1 AND "deletedAt" IS NULL;
-         `,
-        [id],
-      )
-    )[0];
+  async findUserById(id: number): Promise<User | null> {
+    return this.usersRepository.findOneBy({ id });
+  }
+
+  async findUserByIdOrNotFoundFail(id: number): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
       throw NotFoundDomainException.create('User not found');
@@ -40,28 +34,15 @@ export class UsersRepository {
     return user;
   }
 
-  async createUser(dto: CreateUserDto): Promise<DBUser['id']> {
-    const { email, login, password } = dto;
-
-    const query = `
-      WITH inserted_user AS (
-        INSERT INTO "Users" (email, "passwordHash", login)
-        VALUES ($1, $2, $3)
-        RETURNING id
-      ),
-      email_confirmation AS (
-        INSERT INTO "EmailConfirmations" ("userId")
-        SELECT id FROM inserted_user
-      )
-      SELECT id FROM inserted_user;
-    `;
-
-    const { id } = (
-      await this.dataSource.query(query, [email, password, login])
-    )[0];
-
-    return id;
+  async deleteAllUsers() {
+    return this.usersRepository.delete({});
   }
+
+  async save(user: User) {
+    return this.usersRepository.save(user);
+  }
+
+  // Old datasource
 
   async findUserByLoginOrEmail(loginOrEmail: string): Promise<DBUser | null> {
     return (

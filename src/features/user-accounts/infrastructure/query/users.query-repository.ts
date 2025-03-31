@@ -1,28 +1,27 @@
 import { UserViewDto } from '../../api/dto/view-dto/user.view-dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GetUsersQueryParams } from '../../api/dto/query-params-dto/get-users-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { DBUser } from '../types';
+import { User } from '../../domain/user.entity';
+import { NotFoundDomainException } from '../../../../core/exceptions/domain-exceptions';
 
 @Injectable()
 export class UsersQueryRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    // TODO: remove dataSource
+    @InjectDataSource() private dataSource: DataSource,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
   async getByIdOrNotFoundFail(id: number): Promise<UserViewDto> {
-    const user: DBUser = (
-      await this.dataSource.query(
-        `
-      SELECT * FROM "Users" as u
-      WHERE u.id = $1 AND u."deletedAt" IS NULL;
-      `,
-        [id],
-      )
-    )[0];
+    const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw NotFoundDomainException.create('User not found');
     }
 
     return UserViewDto.mapToView(user);
@@ -39,6 +38,7 @@ export class UsersQueryRepository {
     ]);
 
     return PaginatedViewDto.mapToView({
+      //@ts-ignore
       items: items.map((item: DBUser) => UserViewDto.mapToView(item)),
       page: query.pageNumber,
       size: query.pageSize,

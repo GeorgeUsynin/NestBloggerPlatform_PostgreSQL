@@ -26,7 +26,10 @@ import {
   GetAllUsersApi,
   GetUserApi,
 } from './swagger';
-import { CreateUserCommand, DeleteUserCommand } from '../application/use-cases';
+import {
+  CreateUserBySuperAdminCommand,
+  DeleteUserCommand,
+} from '../application/use-cases';
 
 @Controller('sa/users')
 @ApiBasicAuth()
@@ -59,7 +62,7 @@ export class UsersController {
   @CreateUserApi()
   async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
     const userId = await this.commandBus.execute(
-      new CreateUserCommand(body, false),
+      new CreateUserBySuperAdminCommand(body),
     );
 
     return this.usersQueryRepository.getByIdOrNotFoundFail(userId);

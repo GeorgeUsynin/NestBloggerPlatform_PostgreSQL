@@ -21,6 +21,7 @@ import {
 import {
   ChangePasswordUseCase,
   CreateUserUseCase,
+  CreateUserBySuperAdminUseCase,
   DeleteUserUseCase,
   LoginUseCase,
   LogoutUseCase,
@@ -33,9 +34,15 @@ import {
   TerminateAuthSessionDeviceByIdUseCase,
 } from './application/use-cases';
 import { SecurityDevicesController } from './api/securityDevices.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './domain/user.entity';
+import { EmailConfirmation } from './domain/emailConfirmation.entity';
+import { PasswordRecovery } from './domain/passwordRecovery.entity';
+import { EmailConfirmationsRepository } from './infrastructure/emailConfirmations.repository';
 
 const useCases = [
   CreateUserUseCase,
+  CreateUserBySuperAdminUseCase,
   DeleteUserUseCase,
   RegisterUserUseCase,
   RegistrationConfirmationUseCase,
@@ -49,7 +56,11 @@ const useCases = [
   TerminateAuthSessionDeviceByIdUseCase,
 ];
 const strategies = [LocalStrategy, JwtHeaderStrategy, JwtCookieStrategy];
-const repositories = [UsersRepository, AuthDeviceSessionsRepository];
+const repositories = [
+  UsersRepository,
+  AuthDeviceSessionsRepository,
+  EmailConfirmationsRepository,
+];
 const queryRepositories = [
   UsersQueryRepository,
   AuthQueryRepository,
@@ -59,7 +70,10 @@ const services = [AuthService, CryptoService, RegistrationService];
 
 @Module({
   // This will allow injecting the UserModel into the providers in this module
-  imports: [JwtModule],
+  imports: [
+    JwtModule,
+    TypeOrmModule.forFeature([User, EmailConfirmation, PasswordRecovery]),
+  ],
   controllers: [AuthController, UsersController, SecurityDevicesController],
   providers: [
     {

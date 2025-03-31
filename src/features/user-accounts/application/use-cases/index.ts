@@ -10,3 +10,4 @@ export * from './refresh-tokens.use-case';
 export * from './logout.use-case';
 export * from './terminate-all-auth-session-devices-except-current.use-case';
 export * from './terminate-auth-session-device-by-id.use-case';
+export * from './create-user-by-super-admin.use-case';

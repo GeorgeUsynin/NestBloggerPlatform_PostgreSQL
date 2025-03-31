@@ -10,7 +10,7 @@ import {
   passwordConstraints,
 } from '../../constraints';
 
-export class CreateUserInputDto implements CreateUserDto {
+export class CreateUserInputDto {
   // Call order: @IsStringWithTrim() -> @MatchesWithMessage() -> @LengthWithMessage()
   @MatchesWithMessage(loginConstraints.match)
   @LengthWithMessage(loginConstraints.minLength, loginConstraints.maxLength)

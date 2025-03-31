@@ -1,14 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersRepository } from '../../infrastructure/users.repository';
 import { CryptoService } from '../crypto.service';
-import { CreateUserDto } from '../../domain/dto/create/users.create-dto';
-import { UserAccountsConfig } from '../../config';
+import { CreateUserInputDto } from '../../api/dto/input-dto/create/users.input-dto';
+import { UsersRepository } from '../../infrastructure/users.repository';
 
 export class CreateUserCommand {
-  constructor(
-    public readonly dto: CreateUserDto,
-    public readonly isFromRegistration: boolean,
-  ) {}
+  constructor(public readonly dto: CreateUserInputDto) {}
 }
 
 @CommandHandler(CreateUserCommand)
@@ -18,25 +14,21 @@ export class CreateUserUseCase
   constructor(
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
-    private usersConfig: UserAccountsConfig,
   ) {}
 
-  async execute({ dto, isFromRegistration }: CreateUserCommand) {
-    const passwordHash = await this.cryptoService.generatePasswordHash(
-      dto.password,
-    );
+  async execute({ dto }: CreateUserCommand) {
+    const { email, login, password } = dto;
 
-    const userId = await this.usersRepository.createUser({
-      ...dto,
-      password: passwordHash,
+    const passwordHash =
+      await this.cryptoService.generatePasswordHash(password);
+
+    // Create and save new user
+    const user = this.usersRepository.create({
+      login,
+      email,
+      passwordHash,
     });
-
-    if (
-      !isFromRegistration &&
-      this.usersConfig.IS_USER_AUTOMATICALLY_CONFIRMED
-    ) {
-      await this.usersRepository.updateIsConfirmedByUserId(userId, true);
-    }
+    const { id: userId } = await this.usersRepository.save(user);
 
     return userId;
   }

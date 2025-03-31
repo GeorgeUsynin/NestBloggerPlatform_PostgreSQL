@@ -1,5 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { DBUser } from '../../../infrastructure/types';
+import { User } from '../../../domain/user.entity';
 
 export class UserViewDto {
   @ApiProperty({ type: String })
@@ -14,7 +15,7 @@ export class UserViewDto {
   @ApiProperty({ type: Date })
   createdAt: Date;
 
-  static mapToView(user: DBUser): UserViewDto {
+  static mapToView(user: User): UserViewDto {
     const dto: UserViewDto = {
       id: user.id.toString(),
       email: user.email,
