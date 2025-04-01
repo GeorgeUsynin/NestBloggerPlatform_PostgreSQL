@@ -14,6 +14,6 @@ export class DeleteUserUseCase
   async execute({ userId }: DeleteUserCommand) {
     await this.usersRepository.findUserByIdOrNotFoundFail(userId);
 
-    await this.usersRepository.deleteUserById(userId);
+    await this.usersRepository.softDeleteUserById(userId);
   }
 }

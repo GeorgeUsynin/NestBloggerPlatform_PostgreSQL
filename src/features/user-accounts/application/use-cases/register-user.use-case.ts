@@ -4,6 +4,8 @@ import { BadRequestDomainException } from '../../../../core/exceptions/domain-ex
 import { CreateUserCommand } from './create-user.use-case';
 import { RegistrationService } from '../registration.service';
 import { CreateUserInputDto } from '../../api/dto/input-dto/create/users.input-dto';
+import { EmailConfirmationsRepository } from '../../infrastructure/emailConfirmations.repository';
+import { UserAccountsConfig } from '../../config';
 
 export class RegisterUserCommand {
   constructor(public readonly dto: CreateUserInputDto) {}
@@ -15,14 +17,16 @@ export class RegisterUserUseCase
 {
   constructor(
     private usersRepository: UsersRepository,
+    private emailConfirmationsRepository: EmailConfirmationsRepository,
     private registrationService: RegistrationService,
+    private userAccountConfig: UserAccountsConfig,
     private commandBus: CommandBus,
   ) {}
 
   async execute({ dto }: RegisterUserCommand) {
     const { login, email } = dto;
 
-    // check if user already exists
+    // Check if user already exists
     const userWithLogin = await this.usersRepository.findUserByLogin(login);
     const userWithEmail = await this.usersRepository.findUserByEmail(email);
 
@@ -33,19 +37,22 @@ export class RegisterUserUseCase
       throw BadRequestDomainException.create(message, field);
     }
 
-    const createdUserId = await this.commandBus.execute<
-      CreateUserCommand,
-      number
-    >(new CreateUserCommand(dto));
+    // Creating new user
+    const userId = await this.commandBus.execute<CreateUserCommand, number>(
+      new CreateUserCommand(dto),
+    );
 
-    const newUser =
-      await this.usersRepository.findUserByIdOrNotFoundFail(createdUserId);
+    // Creating email confirmation
+    const emailConfirmation = this.emailConfirmationsRepository.create({
+      userId,
+      isConfirmed: this.userAccountConfig.IS_USER_AUTOMATICALLY_CONFIRMED,
+    });
+    const { isConfirmed } =
+      await this.emailConfirmationsRepository.save(emailConfirmation);
 
-    const usersEmailConfirmation =
-      await this.usersRepository.findEmailConfirmationByUserId(createdUserId);
-
-    if (!usersEmailConfirmation.isConfirmed) {
-      await this.registrationService.sendEmailConfirmationCode(newUser);
+    // Sending email
+    if (!isConfirmed) {
+      await this.registrationService.sendEmailConfirmationCode(userId, email);
     }
   }
 }

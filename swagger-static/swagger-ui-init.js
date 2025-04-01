@@ -466,11 +466,11 @@ window.onload = function() {
               "required": false,
               "in": "query",
               "schema": {
-                "default": "desc",
+                "default": "DESC",
                 "type": "string",
                 "enum": [
-                  "asc",
-                  "desc"
+                  "ASC",
+                  "DESC"
                 ]
               }
             },
@@ -724,11 +724,11 @@ window.onload = function() {
               "required": false,
               "in": "query",
               "schema": {
-                "default": "desc",
+                "default": "DESC",
                 "type": "string",
                 "enum": [
-                  "asc",
-                  "desc"
+                  "ASC",
+                  "DESC"
                 ]
               }
             },
@@ -855,11 +855,11 @@ window.onload = function() {
               "required": false,
               "in": "query",
               "schema": {
-                "default": "desc",
+                "default": "DESC",
                 "type": "string",
                 "enum": [
-                  "asc",
-                  "desc"
+                  "ASC",
+                  "DESC"
                 ]
               }
             },
@@ -953,11 +953,11 @@ window.onload = function() {
               "required": false,
               "in": "query",
               "schema": {
-                "default": "desc",
+                "default": "DESC",
                 "type": "string",
                 "enum": [
-                  "asc",
-                  "desc"
+                  "ASC",
+                  "DESC"
                 ]
               }
             },
@@ -1194,11 +1194,11 @@ window.onload = function() {
               "required": false,
               "in": "query",
               "schema": {
-                "default": "desc",
+                "default": "DESC",
                 "type": "string",
                 "enum": [
-                  "asc",
-                  "desc"
+                  "ASC",
+                  "DESC"
                 ]
               }
             },
@@ -1468,11 +1468,11 @@ window.onload = function() {
               "required": false,
               "in": "query",
               "schema": {
-                "default": "desc",
+                "default": "DESC",
                 "type": "string",
                 "enum": [
-                  "asc",
-                  "desc"
+                  "ASC",
+                  "DESC"
                 ]
               }
             },
@@ -1589,11 +1589,11 @@ window.onload = function() {
               "required": false,
               "in": "query",
               "schema": {
-                "default": "desc",
+                "default": "DESC",
                 "type": "string",
                 "enum": [
-                  "asc",
-                  "desc"
+                  "ASC",
+                  "DESC"
                 ]
               }
             },

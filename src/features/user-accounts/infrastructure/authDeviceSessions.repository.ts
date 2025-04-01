@@ -1,45 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreateAuthDeviceSessionDto } from '../domain/dto/create/authDeviceSessions.create-dto';
-import { DBAuthDeviceSession } from './types';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UpdateAuthDeviceSessionDto } from '../domain/dto/update/authDeviceSessions.update-dto';
+import { AuthDeviceSession } from '../domain/authDeviceSession.entity';
 
 @Injectable()
 export class AuthDeviceSessionsRepository {
   // Injection of the model through DI
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(AuthDeviceSession)
+    private authDeviceSessionsRepository: Repository<AuthDeviceSession>,
+  ) {}
 
-  async findAuthDeviceSession(
-    deviceId: string,
-  ): Promise<DBAuthDeviceSession | null> {
-    return (
-      (
-        await this.dataSource.query(
-          `
-      SELECT * FROM "AuthDeviceSessions"
-      WHERE "deviceId" = $1;
-      `,
-          [deviceId],
-        )
-      )[0] ?? null
-    );
+  create(dto: CreateAuthDeviceSessionDto) {
+    return this.authDeviceSessionsRepository.create(dto);
   }
 
-  async findAuthDeviceSessionByDeviceIdOrNotFoundFail(
-    deviceId: string,
-  ): Promise<DBAuthDeviceSession> {
-    const authDeviceSession: DBAuthDeviceSession =
-      (
-        await this.dataSource.query(
-          `
-      SELECT * FROM "AuthDeviceSessions"
-      WHERE "deviceId" = $1;
-      `,
-          [deviceId],
-        )
-      )[0] ?? null;
+  async findAuthDeviceSessionByDeviceId(deviceId: string) {
+    return this.authDeviceSessionsRepository.findOneBy({ deviceId });
+  }
+
+  async findAuthDeviceSessionByDeviceIdOrNotFoundFail(deviceId: string) {
+    const authDeviceSession = await this.authDeviceSessionsRepository.findOneBy(
+      { deviceId },
+    );
 
     if (!authDeviceSession) {
       throw NotFoundDomainException.create('AuthDeviceSession not found');
@@ -48,68 +34,21 @@ export class AuthDeviceSessionsRepository {
     return authDeviceSession;
   }
 
-  async createAuthDeviceSession(
-    dto: CreateAuthDeviceSessionDto,
-  ): Promise<DBAuthDeviceSession> {
-    const {
-      clientIp,
-      deviceId,
-      deviceName,
-      expirationDateOfRefreshToken,
-      issuedAt,
-      userId,
-    } = dto;
-
-    return this.dataSource.query(
-      `
-      INSERT INTO "AuthDeviceSessions"
-      ("deviceId", "userId", "issuedAt", "deviceName", "clientIp", "expirationDateOfRefreshToken")
-	    VALUES ($1, $2, $3, $4, $5, $6);
-      `,
-      [
-        deviceId,
-        userId,
-        issuedAt,
-        deviceName,
-        clientIp,
-        expirationDateOfRefreshToken,
-      ],
-    );
-  }
-
-  async updateAuthDeviceSession(
-    deviceId: string,
-    dto: UpdateAuthDeviceSessionDto,
-  ) {
-    const { expirationDateOfRefreshToken, issuedAt } = dto;
-
-    return this.dataSource.query(
-      `
-      UPDATE "AuthDeviceSessions"
-      SET "expirationDateOfRefreshToken" = $1, "issuedAt" = $2
-      WHERE "deviceId" = $3;
-      `,
-      [expirationDateOfRefreshToken, issuedAt, deviceId],
-    );
-  }
-
   async deleteDeviceSessionById(deviceId: string) {
-    return this.dataSource.query(
-      `
-      DELETE FROM "AuthDeviceSessions"
-      WHERE "deviceId" = $1;
-      `,
-      [deviceId],
-    );
+    return this.authDeviceSessionsRepository.delete({ deviceId });
   }
 
-  async deleteAllOtherUserDeviceSessions(userId: number, deviceId: string) {
-    return this.dataSource.query(
-      `
-      DELETE FROM "AuthDeviceSessions"
-      WHERE "userId" = $1 AND "deviceId" != $2
-      `,
-      [userId, deviceId],
-    );
+  async save(authDeviceSession: AuthDeviceSession) {
+    return this.authDeviceSessionsRepository.save(authDeviceSession);
   }
+
+  // async deleteAllOtherUserDeviceSessions(userId: number, deviceId: string) {
+  //   return this.dataSource.query(
+  //     `
+  //     DELETE FROM "AuthDeviceSessions"
+  //     WHERE "userId" = $1 AND "deviceId" != $2
+  //     `,
+  //     [userId, deviceId],
+  //   );
+  // }
 }

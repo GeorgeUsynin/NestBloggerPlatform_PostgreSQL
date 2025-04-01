@@ -54,7 +54,9 @@ export class JwtCookieStrategy extends PassportStrategy(
 
     // Checking if authDeviceSession exists
     const authDeviceSession =
-      await this.authDeviceSessionsRepository.findAuthDeviceSession(deviceId);
+      await this.authDeviceSessionsRepository.findAuthDeviceSessionByDeviceId(
+        deviceId,
+      );
 
     if (!authDeviceSession) {
       throw UnauthorizedDomainException.create();

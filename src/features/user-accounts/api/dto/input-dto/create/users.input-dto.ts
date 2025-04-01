@@ -1,4 +1,3 @@
-import { CreateUserDto } from '../../../../domain/dto/create/users.create-dto';
 import {
   IsStringWithTrim,
   LengthWithMessage,

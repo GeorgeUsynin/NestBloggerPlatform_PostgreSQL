@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { CryptoService } from '../crypto.service';
 import { BadRequestDomainException } from '../../../../core/exceptions/domain-exceptions';
+import { PasswordRecoveriesRepository } from '../../infrastructure/passwordRecoveries.repository';
 
 export class ChangePasswordCommand {
   constructor(
@@ -15,22 +16,20 @@ export class ChangePasswordUseCase
   implements ICommandHandler<ChangePasswordCommand, void>
 {
   constructor(
+    private passwordRecoveriesRepository: PasswordRecoveriesRepository,
     private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
   ) {}
 
   async execute({ recoveryCode, newPassword }: ChangePasswordCommand) {
     const passwordRecovery =
-      await this.usersRepository.findPasswordRecoveryByRecoveryCode(
+      await this.passwordRecoveriesRepository.findPasswordRecoveryByRecoveryCode(
         recoveryCode,
       );
 
     if (!passwordRecovery) {
       throw BadRequestDomainException.create('Invalid code', 'recoveryCode');
     }
-
-    const newPasswordHash =
-      await this.cryptoService.generatePasswordHash(newPassword);
 
     if (passwordRecovery.recoveryCode !== recoveryCode) {
       throw BadRequestDomainException.create('Invalid code', 'code');
@@ -44,9 +43,15 @@ export class ChangePasswordUseCase
       throw BadRequestDomainException.create('Code expired', 'recoveryCode');
     }
 
-    await this.usersRepository.updateUsersPassword(
+    const newPasswordHash =
+      await this.cryptoService.generatePasswordHash(newPassword);
+
+    const user = await this.usersRepository.findUserByIdOrNotFoundFail(
       passwordRecovery.userId,
-      newPasswordHash,
     );
+
+    // Update user's password
+    user.passwordHash = newPasswordHash;
+    await this.usersRepository.save(user);
   }
 }

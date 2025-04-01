@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersRepository } from '../../infrastructure/users.repository';
 import { BadRequestDomainException } from '../../../../core/exceptions/domain-exceptions';
+import { EmailConfirmationsRepository } from '../../infrastructure/emailConfirmations.repository';
 
 export class RegistrationConfirmationCommand {
   constructor(public readonly code: string) {}
@@ -10,11 +10,15 @@ export class RegistrationConfirmationCommand {
 export class RegistrationConfirmationUseCase
   implements ICommandHandler<RegistrationConfirmationCommand, void>
 {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private emailConfirmationsRepository: EmailConfirmationsRepository,
+  ) {}
 
   async execute({ code }: RegistrationConfirmationCommand) {
     const emailConfirmation =
-      await this.usersRepository.findEmailConfirmationByConfirmationCode(code);
+      await this.emailConfirmationsRepository.findEmailConfirmationByConfirmationCode(
+        code,
+      );
 
     if (!emailConfirmation) {
       throw BadRequestDomainException.create('Invalid code', 'code');
@@ -36,6 +40,8 @@ export class RegistrationConfirmationUseCase
       throw BadRequestDomainException.create('Code expired', 'code');
     }
 
-    await this.usersRepository.updateIsConfirmedByConfirmationCode(code, true);
+    // Update emailConfirmation isConfirmed
+    emailConfirmation.isConfirmed = true;
+    await this.emailConfirmationsRepository.save(emailConfirmation);
   }
 }

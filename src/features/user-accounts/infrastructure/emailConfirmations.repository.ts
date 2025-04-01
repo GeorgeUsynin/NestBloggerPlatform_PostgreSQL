@@ -16,6 +16,14 @@ export class EmailConfirmationsRepository {
     return this.emailConfirmationsRepository.create(dto);
   }
 
+  async findEmailConfirmationByUserId(userId: number) {
+    return this.emailConfirmationsRepository.findOneBy({ userId });
+  }
+
+  async findEmailConfirmationByConfirmationCode(confirmationCode: string) {
+    return this.emailConfirmationsRepository.findOneBy({ confirmationCode });
+  }
+
   async save(emailConfirmation: EmailConfirmation) {
     return this.emailConfirmationsRepository.save(emailConfirmation);
   }

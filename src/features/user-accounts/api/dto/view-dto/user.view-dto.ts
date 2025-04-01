@@ -1,5 +1,4 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { DBUser } from '../../../infrastructure/types';
 import { User } from '../../../domain/user.entity';
 
 export class UserViewDto {
@@ -33,7 +32,7 @@ export class MeViewDto extends OmitType(UserViewDto, [
 ] as const) {
   userId: string;
 
-  static mapToView(user: DBUser): MeViewDto {
+  static mapToView(user: User): MeViewDto {
     const dto = new MeViewDto();
 
     dto.email = user.email;

@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { EmailConfirmation } from './emailConfirmation.entity';
 import { PasswordRecovery } from './passwordRecovery.entity';
+import { AuthDeviceSession } from './authDeviceSession.entity';
 
 @Entity({ name: 'Users' })
 export class User {
@@ -41,4 +43,10 @@ export class User {
 
   @OneToOne(() => PasswordRecovery, (passwordRecovery) => passwordRecovery.user)
   passwordRecovery: PasswordRecovery;
+
+  @OneToMany(
+    () => AuthDeviceSession,
+    (authDeviceSession) => authDeviceSession.user,
+  )
+  authDeviceSession: AuthDeviceSession[];
 }

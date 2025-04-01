@@ -26,6 +26,9 @@ export class RegistrationEmailResendingUseCase
       );
     }
 
-    await this.registrationService.sendEmailConfirmationCode(user);
+    await this.registrationService.sendEmailConfirmationCode(
+      user.id,
+      user.email,
+    );
   }
 }

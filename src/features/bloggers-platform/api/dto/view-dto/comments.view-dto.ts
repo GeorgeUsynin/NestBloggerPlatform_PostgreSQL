@@ -1,13 +1,13 @@
 import { LikeStatus } from '../../../types';
 import { ApiProperty } from '@nestjs/swagger';
 import { DBComment } from '../../../infrastructure/types';
-import { DBUser } from '../../../../../features/user-accounts/infrastructure/types';
+import { User } from '../../../../user-accounts/domain/user.entity';
 
 class MapViewCommentData {
   id: DBComment['id'];
   content: DBComment['content'];
-  userId: DBUser['id'];
-  userLogin: DBUser['login'];
+  userId: User['id'];
+  userLogin: User['login'];
   createdAt: DBComment['createdAt'];
   myStatus: LikeStatus;
   dislikesCount: number;

@@ -6,18 +6,16 @@ import {
   OneToOne,
   JoinColumn,
   PrimaryColumn,
-  DeleteDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity({ name: 'PasswordRecoveries' })
 export class PasswordRecovery {
-  // Первичный ключ, он же является внешним к таблице EmailConfirmation
   @PrimaryColumn({ type: 'integer' })
   userId: number;
 
-  @Column({ type: 'time with time zone' })
-  expirationDate: Date | null;
+  @Column({ type: 'timestamp with time zone' })
+  expirationDate: Date;
 
   @Column({ type: 'uuid' })
   recoveryCode: string;
@@ -28,12 +26,9 @@ export class PasswordRecovery {
   @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: 'timestamp with time zone', nullable: true })
-  deletedAt: Date | null;
-
   @OneToOne(() => User, (user) => user.passwordRecovery, {
-    cascade: true,
     onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
   user: User;

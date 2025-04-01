@@ -48,7 +48,7 @@ export class LoginUseCase
 
     const { iat, exp } = this.refreshTokenContext.decode(refreshToken);
 
-    await this.authDeviceSessionsRepository.createAuthDeviceSession({
+    const authDeviceSession = this.authDeviceSessionsRepository.create({
       userId,
       deviceId,
       issuedAt: new Date(Number(iat) * 1000),
@@ -56,6 +56,7 @@ export class LoginUseCase
       clientIp,
       expirationDateOfRefreshToken: new Date(Number(exp) * 1000),
     });
+    await this.authDeviceSessionsRepository.save(authDeviceSession);
 
     return { accessToken, refreshToken };
   }

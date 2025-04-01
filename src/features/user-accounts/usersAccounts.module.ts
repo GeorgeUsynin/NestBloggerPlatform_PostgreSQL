@@ -39,6 +39,7 @@ import { User } from './domain/user.entity';
 import { EmailConfirmation } from './domain/emailConfirmation.entity';
 import { PasswordRecovery } from './domain/passwordRecovery.entity';
 import { EmailConfirmationsRepository } from './infrastructure/emailConfirmations.repository';
+import { AuthDeviceSession } from './domain/authDeviceSession.entity';
 
 const useCases = [
   CreateUserUseCase,
@@ -72,7 +73,12 @@ const services = [AuthService, CryptoService, RegistrationService];
   // This will allow injecting the UserModel into the providers in this module
   imports: [
     JwtModule,
-    TypeOrmModule.forFeature([User, EmailConfirmation, PasswordRecovery]),
+    TypeOrmModule.forFeature([
+      User,
+      EmailConfirmation,
+      PasswordRecovery,
+      AuthDeviceSession,
+    ]),
   ],
   controllers: [AuthController, UsersController, SecurityDevicesController],
   providers: [
