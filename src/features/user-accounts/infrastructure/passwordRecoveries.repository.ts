@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PasswordRecovery } from '../domain/passwordRecovery.entity';
 import { CreatePasswordRecoveryDto } from '../domain/dto/create/passwordRecovery.create-dto';
 
+type TRelations = ['user'];
+
 @Injectable()
 export class PasswordRecoveriesRepository {
   // Injection of the model through DI
@@ -20,8 +22,18 @@ export class PasswordRecoveriesRepository {
     return this.passwordRecoveriesRepository.findOneBy({ userId });
   }
 
-  async findPasswordRecoveryByRecoveryCode(recoveryCode: string) {
-    return this.passwordRecoveriesRepository.findOneBy({ recoveryCode });
+  async findPasswordRecoveryByRecoveryCode(
+    recoveryCode: string,
+    relations?: TRelations,
+  ) {
+    const relationMap = relations?.length
+      ? Object.fromEntries(relations.map((relation) => [relation, true]))
+      : undefined;
+
+    return this.passwordRecoveriesRepository.findOne({
+      where: { recoveryCode },
+      relations: relationMap,
+    });
   }
 
   async save(passwordRecovery: PasswordRecovery) {

@@ -42,14 +42,16 @@ export class RefreshTokensUseCase
 
     const { iat, exp } = this.refreshTokenContext.decode(refreshToken);
 
-    await this.authDeviceSessionsRepository.findAuthDeviceSessionByDeviceIdOrNotFoundFail(
-      deviceId,
-    );
+    const authDeviceSession =
+      await this.authDeviceSessionsRepository.findAuthDeviceSessionByDeviceIdOrNotFoundFail(
+        deviceId,
+      );
 
-    await this.authDeviceSessionsRepository.updateAuthDeviceSession(deviceId, {
-      issuedAt: new Date(Number(iat) * 1000),
-      expirationDateOfRefreshToken: new Date(Number(exp) * 1000),
-    });
+    authDeviceSession.issuedAt = new Date(Number(iat) * 1000);
+    authDeviceSession.expirationDateOfRefreshToken = new Date(
+      Number(exp) * 1000,
+    );
+    await this.authDeviceSessionsRepository.save(authDeviceSession);
 
     return { accessToken, refreshToken };
   }

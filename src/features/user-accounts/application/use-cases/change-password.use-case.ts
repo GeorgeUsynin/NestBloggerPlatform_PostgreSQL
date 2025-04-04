@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersRepository } from '../../infrastructure/users.repository';
 import { CryptoService } from '../crypto.service';
 import { BadRequestDomainException } from '../../../../core/exceptions/domain-exceptions';
 import { PasswordRecoveriesRepository } from '../../infrastructure/passwordRecoveries.repository';
@@ -17,7 +16,6 @@ export class ChangePasswordUseCase
 {
   constructor(
     private passwordRecoveriesRepository: PasswordRecoveriesRepository,
-    private usersRepository: UsersRepository,
     private cryptoService: CryptoService,
   ) {}
 
@@ -25,6 +23,7 @@ export class ChangePasswordUseCase
     const passwordRecovery =
       await this.passwordRecoveriesRepository.findPasswordRecoveryByRecoveryCode(
         recoveryCode,
+        ['user'],
       );
 
     if (!passwordRecovery) {
@@ -46,12 +45,10 @@ export class ChangePasswordUseCase
     const newPasswordHash =
       await this.cryptoService.generatePasswordHash(newPassword);
 
-    const user = await this.usersRepository.findUserByIdOrNotFoundFail(
-      passwordRecovery.userId,
-    );
-
-    // Update user's password
-    user.passwordHash = newPasswordHash;
-    await this.usersRepository.save(user);
+    // Using user relations to update user's password
+    // 1. Need to pass relations
+    // 2. Need to add cascade: true into PasswordRecovery entity user relation
+    passwordRecovery.user.passwordHash = newPasswordHash;
+    await this.passwordRecoveriesRepository.save(passwordRecovery);
   }
 }

@@ -27,6 +27,7 @@ export class PasswordRecovery {
   updatedAt: Date;
 
   @OneToOne(() => User, (user) => user.passwordRecovery, {
+    cascade: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })

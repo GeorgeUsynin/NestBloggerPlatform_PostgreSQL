@@ -1,24 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { AuthDeviceSessionViewDto } from '../../api/dto/view-dto/authDeviceSession.view-dto';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { DBAuthDeviceSession } from '../types';
+import { AuthDeviceSession } from '../../domain/authDeviceSession.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthDeviceSessionQueryRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(AuthDeviceSession)
+    private authDeviceSessionsRepository: Repository<AuthDeviceSession>,
+  ) {}
 
   async getAllUserAuthDeviceSessions(
     userId: number,
   ): Promise<AuthDeviceSessionViewDto[]> {
-    const authDeviceSessions: DBAuthDeviceSession[] =
-      await this.dataSource.query(
-        `
-        SELECT * FROM "AuthDeviceSessions"
-        WHERE "userId" = $1;
-        `,
-        [userId],
-      );
+    const authDeviceSessions: AuthDeviceSession[] =
+      await this.authDeviceSessionsRepository.findBy({ userId });
 
     return authDeviceSessions.map(AuthDeviceSessionViewDto.mapToView);
   }

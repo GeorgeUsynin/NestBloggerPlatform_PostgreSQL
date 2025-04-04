@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreateAuthDeviceSessionDto } from '../domain/dto/create/authDeviceSessions.create-dto';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { UpdateAuthDeviceSessionDto } from '../domain/dto/update/authDeviceSessions.update-dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Not, Repository } from 'typeorm';
 import { AuthDeviceSession } from '../domain/authDeviceSession.entity';
 
 @Injectable()
@@ -38,17 +37,18 @@ export class AuthDeviceSessionsRepository {
     return this.authDeviceSessionsRepository.delete({ deviceId });
   }
 
+  async deleteAllOtherUserDeviceSessions(userId: number, deviceId: string) {
+    return this.authDeviceSessionsRepository.delete({
+      userId,
+      deviceId: Not(deviceId),
+    });
+  }
+
+  async deleteAllAuthDeviceSessions() {
+    return this.authDeviceSessionsRepository.delete({});
+  }
+
   async save(authDeviceSession: AuthDeviceSession) {
     return this.authDeviceSessionsRepository.save(authDeviceSession);
   }
-
-  // async deleteAllOtherUserDeviceSessions(userId: number, deviceId: string) {
-  //   return this.dataSource.query(
-  //     `
-  //     DELETE FROM "AuthDeviceSessions"
-  //     WHERE "userId" = $1 AND "deviceId" != $2
-  //     `,
-  //     [userId, deviceId],
-  //   );
-  // }
 }

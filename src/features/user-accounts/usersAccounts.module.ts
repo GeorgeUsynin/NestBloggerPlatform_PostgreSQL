@@ -40,6 +40,7 @@ import { EmailConfirmation } from './domain/emailConfirmation.entity';
 import { PasswordRecovery } from './domain/passwordRecovery.entity';
 import { EmailConfirmationsRepository } from './infrastructure/emailConfirmations.repository';
 import { AuthDeviceSession } from './domain/authDeviceSession.entity';
+import { PasswordRecoveriesRepository } from './infrastructure/passwordRecoveries.repository';
 
 const useCases = [
   CreateUserUseCase,
@@ -61,6 +62,7 @@ const repositories = [
   UsersRepository,
   AuthDeviceSessionsRepository,
   EmailConfirmationsRepository,
+  PasswordRecoveriesRepository,
 ];
 const queryRepositories = [
   UsersQueryRepository,
@@ -114,6 +116,6 @@ const services = [AuthService, CryptoService, RegistrationService];
     ...strategies,
     ...useCases,
   ],
-  exports: [UsersRepository, UserAccountsConfig],
+  exports: [UsersRepository, UserAccountsConfig, AuthDeviceSessionsRepository],
 })
 export class UsersAccountsModule {}
