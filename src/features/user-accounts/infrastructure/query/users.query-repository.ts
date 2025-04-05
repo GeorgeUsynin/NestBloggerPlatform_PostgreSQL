@@ -37,7 +37,7 @@ export class UsersQueryRepository {
 
     const builder = this.usersRepository
       .createQueryBuilder('user')
-      .orderBy(`user.${sortBy}`, sortDirection)
+      .orderBy(`user.${sortBy}`, sortDirection.toUpperCase() as 'ASC' | 'DESC')
       .offset(query.calculateSkip())
       .limit(pageSize);
 

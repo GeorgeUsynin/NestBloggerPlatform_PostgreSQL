@@ -31,8 +31,8 @@ export class PaginationParams {
 }
 
 export enum SortDirection {
-  Asc = 'ASC',
-  Desc = 'DESC',
+  Asc = 'asc',
+  Desc = 'desc',
 }
 
 // Base class for query parameters with sorting and pagination
