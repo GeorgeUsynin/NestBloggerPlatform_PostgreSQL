@@ -22,6 +22,6 @@ export class DeletePostByBlogIdAndPostIdUseCase
     await this.blogsRepository.findBlogByIdOrNotFoundFail(blogId);
     await this.postsRepository.findPostByIdOrNotFoundFail(postId);
 
-    await this.postsRepository.deletePostById(postId);
+    await this.postsRepository.softDeletePostById(postId);
   }
 }

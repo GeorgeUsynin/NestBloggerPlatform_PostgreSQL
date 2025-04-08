@@ -1,58 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
-import { DBBlog } from './types';
 import { CreateBlogDto } from '../domain/dto/create/blogs.create-dto';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { UpdateBlogDto } from '../domain/dto/update/blogs.update-dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Blog } from '../domain/blog.entity';
 
 @Injectable()
 export class BlogsRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(Blog)
+    private blogsRepository: Repository<Blog>,
+  ) {}
 
-  async createBlog(dto: CreateBlogDto): Promise<DBBlog['id']> {
-    const { description, name, websiteUrl } = dto;
-
-    const query = `
-      INSERT INTO "Blogs"
-      (name, description, "websiteUrl")
-      VALUES ($1, $2, $3)
-      RETURNING id;
-      `;
-
-    const { id } = (
-      await this.dataSource.query(query, [name, description, websiteUrl])
-    )[0];
-
-    return id;
+  create(dto: CreateBlogDto) {
+    return this.blogsRepository.create(dto);
   }
 
-  async findBlogById(id: number): Promise<DBBlog> {
-    const blog =
-      (
-        await this.dataSource.query(
-          `
-    SELECT * FROM "Blogs"
-    WHERE id = $1 AND "deletedAt" IS NULL;
-    `,
-          [id],
-        )
-      )[0] ?? null;
-
-    return blog;
-  }
-
-  async findBlogByIdOrNotFoundFail(id: number): Promise<DBBlog> {
-    const blog =
-      (
-        await this.dataSource.query(
-          `
-      SELECT * FROM "Blogs"
-      WHERE id = $1 AND "deletedAt" IS NULL;
-      `,
-          [id],
-        )
-      )[0] ?? null;
+  async findBlogByIdOrNotFoundFail(id: number) {
+    const blog = await this.blogsRepository.findOneBy({ id });
 
     if (!blog) {
       throw NotFoundDomainException.create('Blog not found');
@@ -61,27 +26,19 @@ export class BlogsRepository {
     return blog;
   }
 
-  async update(blogId: number, dto: UpdateBlogDto) {
-    const { description, name, websiteUrl } = dto;
-
-    return this.dataSource.query(
-      `
-      UPDATE "Blogs"
-      SET description = $1, name = $2, "websiteUrl" = $3
-      WHERE id = $4 AND "deletedAt" IS NULL;
-      `,
-      [description, name, websiteUrl, blogId],
-    );
+  async findBlogById(id: number) {
+    return await this.blogsRepository.findOneBy({ id });
   }
 
-  async deleteBlogById(blogId: number) {
-    return this.dataSource.query(
-      `
-      UPDATE "Blogs"
-	    SET "deletedAt" = $1
-	    WHERE id = $2;
-      `,
-      [new Date(), blogId],
-    );
+  async softDeleteBlogById(id: number) {
+    return this.blogsRepository.softDelete(id);
+  }
+
+  async deleteAllBlogs() {
+    return this.blogsRepository.delete({});
+  }
+
+  async save(blog: Blog) {
+    return this.blogsRepository.save(blog);
   }
 }

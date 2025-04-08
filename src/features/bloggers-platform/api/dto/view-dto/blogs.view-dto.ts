@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DBBlog } from '../../../infrastructure/types';
+import { Blog } from '../../../domain/blog.entity';
 
 export class BlogViewDto {
   @ApiProperty({ type: Number })
@@ -23,7 +23,7 @@ export class BlogViewDto {
   })
   isMembership: boolean;
 
-  static mapToView(blog: DBBlog): BlogViewDto {
+  static mapToView(blog: Blog): BlogViewDto {
     const dto = new BlogViewDto();
 
     dto.id = blog.id.toString();

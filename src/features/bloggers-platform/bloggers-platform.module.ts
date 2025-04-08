@@ -25,6 +25,9 @@ import {
   UpdateLikePostStatusUseCase,
   UpdateLikeCommentStatusUseCase,
 } from './application/use-cases';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Blog } from './domain/blog.entity';
+import { Post } from './domain/post.entity';
 
 const controllers = [
   BlogsController,
@@ -60,7 +63,7 @@ const queryRepositories = [
 
 @Module({
   // This will allow injecting models into the providers in this module
-  imports: [UsersAccountsModule],
+  imports: [UsersAccountsModule, TypeOrmModule.forFeature([Blog, Post])],
   controllers: [...controllers],
   providers: [
     ...repositories,
@@ -68,5 +71,6 @@ const queryRepositories = [
     ...useCases,
     BlogIsExistConstraint,
   ],
+  exports: [BlogsRepository, PostsRepository],
 })
 export class BloggersPlatformModule {}

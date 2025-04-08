@@ -22,12 +22,13 @@ export class CreatePostUseCase
   async execute({ blogId, dto }: CreatePostCommand) {
     const blog = await this.blogsRepository.findBlogByIdOrNotFoundFail(blogId);
 
-    const newPostId = await this.postsRepository.createPost({
+    const newPost = await this.postsRepository.create({
       ...dto,
       blogId,
       blogName: blog.name,
     });
+    await this.postsRepository.save(newPost);
 
-    return newPostId;
+    return newPost.id;
   }
 }

@@ -14,6 +14,6 @@ export class DeleteBlogUseCase
   async execute({ id }: DeleteBlogCommand) {
     await this.blogsRepository.findBlogByIdOrNotFoundFail(id);
 
-    await this.blogsRepository.deleteBlogById(id);
+    await this.blogsRepository.softDeleteBlogById(id);
   }
 }

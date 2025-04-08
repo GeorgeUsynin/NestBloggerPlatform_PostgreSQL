@@ -11,16 +11,21 @@ import {
 import { EmailConfirmation } from './emailConfirmation.entity';
 import { PasswordRecovery } from './passwordRecovery.entity';
 import { AuthDeviceSession } from './authDeviceSession.entity';
+import { loginConstraints, passwordConstraints } from '../api/dto/constraints';
 
 @Entity({ name: 'Users' })
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 20, unique: true })
+  @Column({ type: 'varchar', length: loginConstraints.maxLength, unique: true })
   login: string;
 
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({
+    type: 'varchar',
+    length: passwordConstraints.maxLength,
+    unique: true,
+  })
   email: string;
 
   @Column({ type: 'varchar' })

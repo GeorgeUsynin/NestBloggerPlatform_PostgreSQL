@@ -1,15 +1,15 @@
-import { LikeStatus } from '../../../types';
 import { ApiProperty } from '@nestjs/swagger';
-import { DBPost } from '../../../infrastructure/types';
+import { Post } from '../../../domain/post.entity';
+import { LikeStatus } from '../../../types';
 
 class MapViewPostData {
-  id: DBPost['id'];
-  blogId: DBPost['blogId'];
-  blogName: DBPost['blogName'];
-  content: DBPost['content'];
-  createdAt: DBPost['createdAt'];
-  shortDescription: DBPost['shortDescription'];
-  title: DBPost['title'];
+  id: Post['id'];
+  blogId: Post['blogId'];
+  blogName: Post['blogName'];
+  content: Post['content'];
+  createdAt: Post['createdAt'];
+  shortDescription: Post['shortDescription'];
+  title: Post['title'];
   myStatus: LikeStatus;
   dislikesCount: number;
   likesCount: number;

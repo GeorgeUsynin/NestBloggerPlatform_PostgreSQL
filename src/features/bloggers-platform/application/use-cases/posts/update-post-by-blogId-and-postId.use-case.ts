@@ -29,8 +29,12 @@ export class UpdatePostByBlogIdAndPostIdUseCase
       throw NotFoundDomainException.create('Blog not found', 'blogId');
     }
 
-    await this.postsRepository.findPostByIdOrNotFoundFail(postId);
+    const post = await this.postsRepository.findPostByIdOrNotFoundFail(postId);
 
-    await this.postsRepository.update(postId, dto);
+    // Updating and saving post
+    post.content = dto.content;
+    post.shortDescription = dto.shortDescription;
+    post.title = dto.title;
+    await this.postsRepository.save(post);
   }
 }

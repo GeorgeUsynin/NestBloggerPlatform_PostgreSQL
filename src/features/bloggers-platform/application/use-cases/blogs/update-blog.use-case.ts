@@ -16,8 +16,12 @@ export class UpdateBlogUseCase
   constructor(private blogsRepository: BlogsRepository) {}
 
   async execute({ blogId, dto }: UpdateBlogCommand) {
-    await this.blogsRepository.findBlogByIdOrNotFoundFail(blogId);
+    const blog = await this.blogsRepository.findBlogByIdOrNotFoundFail(blogId);
 
-    await this.blogsRepository.update(blogId, dto);
+    blog.name = dto.name;
+    blog.description = dto.description;
+    blog.websiteUrl = dto.websiteUrl;
+
+    await this.blogsRepository.save(blog);
   }
 }

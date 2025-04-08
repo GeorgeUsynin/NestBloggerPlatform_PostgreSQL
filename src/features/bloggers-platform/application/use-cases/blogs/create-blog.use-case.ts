@@ -13,8 +13,9 @@ export class CreateBlogUseCase
   constructor(private blogsRepository: BlogsRepository) {}
 
   async execute({ dto }: CreateBlogCommand) {
-    const newBlogId = await this.blogsRepository.createBlog(dto);
+    const newBlog = this.blogsRepository.create(dto);
+    await this.blogsRepository.save(newBlog);
 
-    return newBlogId;
+    return newBlog.id;
   }
 }

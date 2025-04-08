@@ -2,25 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { BlogViewDto } from '../api/dto/view-dto/blogs.view-dto';
 import { GetBlogsQueryParams } from '../api/dto/query-params-dto/get-blogs-query-params.input-dto';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { DBBlog } from './types';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Blog } from '../domain/blog.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class BlogsQueryRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(Blog)
+    private blogsRepository: Repository<Blog>,
+  ) {}
 
   async getByIdOrNotFoundFail(id: number): Promise<BlogViewDto> {
-    const blog =
-      (
-        await this.dataSource.query(
-          `
-      SELECT * FROM "Blogs"
-      WHERE id = $1 AND "deletedAt" IS NULL
-      `,
-          [id],
-        )
-      )[0] ?? null;
+    const blog = await this.blogsRepository.findOneBy({ id });
 
     if (!blog) {
       throw new NotFoundException('Blog not found');
@@ -32,51 +26,27 @@ export class BlogsQueryRepository {
   async getAllBlogs(
     query: GetBlogsQueryParams,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
-    // TODO: Refactor with dynamic query and filter!
-    const [items, totalCount] = await Promise.all([
-      this.findBlogItemsByQueryParams(query),
-      this.getTotalBlogsCount(query),
-    ]);
+    const { sortBy, sortDirection, pageSize, searchNameTerm } = query;
+
+    const builder = this.blogsRepository
+      .createQueryBuilder('blog')
+      .orderBy(`blog.${sortBy}`, sortDirection.toUpperCase() as 'ASC' | 'DESC')
+      .offset(query.calculateSkip())
+      .limit(pageSize);
+
+    if (searchNameTerm) {
+      builder.where('blog.name ILIKE :name', {
+        name: `%${searchNameTerm}%`,
+      });
+    }
+
+    const [blogs, totalCount] = await builder.getManyAndCount();
 
     return PaginatedViewDto.mapToView({
-      items: items.map((item) => BlogViewDto.mapToView(item)),
+      items: blogs.map((item) => BlogViewDto.mapToView(item)),
       page: query.pageNumber,
       size: query.pageSize,
       totalCount,
     });
-  }
-
-  async findBlogItemsByQueryParams(
-    query: GetBlogsQueryParams,
-  ): Promise<DBBlog[]> {
-    const { sortBy, sortDirection, pageSize, searchNameTerm } = query;
-
-    return this.dataSource.query(
-      `
-      SELECT * FROM "Blogs" as b
-      WHERE b."deletedAt" IS NULL
-      AND b.name ILIKE $1
-      ORDER BY b."${sortBy}" ${sortDirection}
-      LIMIT $2 OFFSET $3
-      `,
-      [`%${searchNameTerm ?? ''}%`, pageSize, query.calculateSkip()],
-    );
-  }
-
-  async getTotalBlogsCount(query: GetBlogsQueryParams): Promise<number> {
-    const { searchNameTerm } = query;
-
-    const { count } = (
-      await this.dataSource.query(
-        `
-      SELECT COUNT(*)::int FROM "Blogs" as b
-      WHERE b."deletedAt" IS NULL
-      AND b.name ILIKE $1
-      `,
-        [`%${searchNameTerm ?? ''}%`],
-      )
-    )[0];
-
-    return count;
   }
 }
