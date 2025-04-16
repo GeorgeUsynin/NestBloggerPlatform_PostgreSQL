@@ -1,14 +1,14 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { LikesRepository } from '../../../infrastructure/likes.repository';
 import { UpdateLikeStatusCommand, UpdateLikesUseCase } from '../likes';
-import { DBComment } from '../../../infrastructure/types';
 import { CommentsRepository } from '../../../infrastructure/comments.repository';
+import { Comment } from '../../../domain/comment.entity';
 
 export class UpdateCommentLikeStatusCommand extends UpdateLikeStatusCommand {}
 
 @CommandHandler(UpdateCommentLikeStatusCommand)
 export class UpdateLikeCommentStatusUseCase
-  extends UpdateLikesUseCase<DBComment>
+  extends UpdateLikesUseCase<Comment>
   implements ICommandHandler<UpdateCommentLikeStatusCommand, void>
 {
   constructor(
@@ -18,7 +18,7 @@ export class UpdateLikeCommentStatusUseCase
     super(likesRepository);
   }
 
-  checkThatLikableEntityExists(id: number): Promise<DBComment> {
+  checkThatLikableEntityExists(id: number): Promise<Comment> {
     return this.commentsRepository.findCommentByIdOrNotFoundFail(id);
   }
 }

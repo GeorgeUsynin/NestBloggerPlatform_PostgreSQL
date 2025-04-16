@@ -4,6 +4,8 @@ import { UsersRepository } from '../user-accounts/infrastructure/users.repositor
 import { AuthDeviceSessionsRepository } from '../user-accounts/infrastructure/authDeviceSessions.repository';
 import { BlogsRepository } from '../bloggers-platform/infrastructure/blogs.repository';
 import { PostsRepository } from '../bloggers-platform/infrastructure/posts.repository';
+import { CommentsRepository } from '../bloggers-platform/infrastructure/comments.repository';
+import { LikesRepository } from '../bloggers-platform/infrastructure/likes.repository';
 
 @Controller('testing')
 export class TestingController {
@@ -12,6 +14,8 @@ export class TestingController {
     private authDeviceSessionsRepository: AuthDeviceSessionsRepository,
     private blogsRepository: BlogsRepository,
     private postsRepository: PostsRepository,
+    private commentsRepository: CommentsRepository,
+    private likesRepository: LikesRepository,
   ) {}
 
   @Delete('all-data')
@@ -22,9 +26,7 @@ export class TestingController {
     await this.authDeviceSessionsRepository.deleteAllAuthDeviceSessions();
     await this.blogsRepository.deleteAllBlogs();
     await this.postsRepository.deleteAllPosts();
-    // await this.dataSource.query(`DELETE FROM "Blogs"`);
-    // await this.dataSource.query(`DELETE FROM "Posts"`);
-    // await this.dataSource.query(`DELETE FROM "Comments"`);
-    // await this.dataSource.query(`DELETE FROM "Likes"`);
+    await this.commentsRepository.deleteAllComments();
+    await this.likesRepository.deleteAllLikes();
   }
 }

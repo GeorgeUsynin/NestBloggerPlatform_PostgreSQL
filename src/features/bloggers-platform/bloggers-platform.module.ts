@@ -28,6 +28,8 @@ import {
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Blog } from './domain/blog.entity';
 import { Post } from './domain/post.entity';
+import { Comment } from './domain/comment.entity';
+import { Like } from './domain/like.entity';
 
 const controllers = [
   BlogsController,
@@ -63,7 +65,10 @@ const queryRepositories = [
 
 @Module({
   // This will allow injecting models into the providers in this module
-  imports: [UsersAccountsModule, TypeOrmModule.forFeature([Blog, Post])],
+  imports: [
+    UsersAccountsModule,
+    TypeOrmModule.forFeature([Blog, Post, Comment, Like]),
+  ],
   controllers: [...controllers],
   providers: [
     ...repositories,
@@ -71,6 +76,11 @@ const queryRepositories = [
     ...useCases,
     BlogIsExistConstraint,
   ],
-  exports: [BlogsRepository, PostsRepository],
+  exports: [
+    BlogsRepository,
+    PostsRepository,
+    CommentsRepository,
+    LikesRepository,
+  ],
 })
 export class BloggersPlatformModule {}

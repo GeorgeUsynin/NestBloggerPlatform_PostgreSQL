@@ -1,6 +1,6 @@
 import { UpdateLikeDto } from '../../../domain/dto/update/likes.update-dto';
 import { LikesRepository } from '../../../infrastructure/likes.repository';
-import { LikeStatus, ParentType } from '../../../types';
+import { LikeStatus, ParentType } from '../../../domain/like.entity';
 
 export class UpdateLikeStatusCommand {
   constructor(
@@ -34,12 +34,13 @@ export abstract class UpdateLikesUseCase<T> {
       if (likeStatus === LikeStatus.None) return;
 
       // Create and save the like
-      await this.likesRepository.createLike({
+      const newLike = this.likesRepository.create({
         parentId: entityId,
         userId,
         status: likeStatus,
         parentType: entityType,
       });
+      await this.likesRepository.save(newLike);
 
       return;
     }
@@ -52,7 +53,8 @@ export abstract class UpdateLikesUseCase<T> {
     if (like.status === likeStatus) return;
 
     // Update the like
-    this.likesRepository.update(like.id, dto);
+    like.status = dto.likeStatus;
+    await this.likesRepository.save(like);
   }
 
   abstract checkThatLikableEntityExists(id: number): Promise<T>;

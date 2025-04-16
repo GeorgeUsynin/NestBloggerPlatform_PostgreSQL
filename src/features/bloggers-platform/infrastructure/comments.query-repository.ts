@@ -2,92 +2,100 @@ import { Injectable } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { CommentViewDto } from '../api/dto/view-dto/comments.view-dto';
 import { GetCommentsQueryParams } from '../api/dto/query-params-dto/get-comments-query-params.input-dto';
-import { LikeStatus, ParentType } from '../types';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Like, LikeStatus, ParentType } from '../domain/like.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
-import { DBComment, DBPost } from './types';
+import { Comment } from '../domain/comment.entity';
+import { User } from '../../user-accounts/domain/user.entity';
+import { Post } from '../domain/post.entity';
 
-class DBCommentWithLoginAndMyStatus extends DBComment {
-  userLogin: string;
-  myStatus: LikeStatus;
+export class EnrichedComment extends Comment {
+  user: User;
+  like: Like | null;
 }
 
-class CommentsLikesDislikesInfo {
+class CommentLikesDislikesInfo {
   likesCount: number;
   dislikesCount: number;
 }
 
 @Injectable()
 export class CommentsQueryRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
-
+  constructor(
+    @InjectRepository(Comment)
+    private commentsRepository: Repository<Comment>,
+    @InjectRepository(Post)
+    private postsRepository: Repository<Post>,
+    @InjectRepository(Like)
+    private likesRepository: Repository<Like>,
+  ) {}
   async getAllCommentsByPostId(
     query: GetCommentsQueryParams,
     postId: number,
     userId: number | null,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
-    const post: DBPost | null =
-      (
-        await this.dataSource.query(
-          `
-          SELECT * FROM "Posts"
-          WHERE id = $1 AND "deletedAt" IS NULL;
-        `,
-          [postId],
-        )
-      )[0] ?? null;
+    const post: Post | null = await this.postsRepository.findOneBy({
+      id: postId,
+    });
 
     if (!post) {
       throw NotFoundDomainException.create('Post not found');
     }
 
-    // TODO: Refactor with dynamic query and filter!
-    const [items, totalCount] = await Promise.all([
-      this.findCommentItemsByQueryParams(query, post.id),
-      this.getTotalCommentsCount(post.id),
-    ]);
+    const commentsQueryBuilder =
+      await this.createCommentsQueryBuilderByQueryParams(query, postId);
 
-    const commentsIds = items.map((item) => item.id);
-    const comments: DBCommentWithLoginAndMyStatus[] =
-      await this.dataSource.query(
-        `
-        SELECT
-            c.*, 
-            u."login" AS "userLogin", 
-            COALESCE(l."status", 'None') AS "myStatus"
-        FROM "Comments" as c
-        LEFT JOIN "Users" AS u 
-            ON c."userId" = u."id"
-        LEFT JOIN "Likes" AS l 
-            ON l."parentId" = c."id"
-            AND l."parentType" = $3
-            AND l."userId" = $2
-        WHERE c.id = ANY($1) 
-            AND c."deletedAt" IS NULL
-        ORDER BY array_position($1, c.id);
-        `,
-        [commentsIds, userId, ParentType.comment],
-      );
+    const totalCount = await commentsQueryBuilder.getCount();
 
-    const commentLikesDislikes: CommentsLikesDislikesInfo[] =
-      await this.dataSource.query(
-        `
-        SELECT 
-            COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Like')::int, 0) AS "likesCount",
-            COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Dislike')::int, 0) AS "dislikesCount"
-        FROM UNNEST($1::int[]) AS c("id")  -- Разворачиваем список комментариев
-        LEFT JOIN "Likes" l
-        ON l."parentId" = c.id AND l."parentType" = $2
-        GROUP BY c.id
-        ORDER BY array_position($1, c.id);
-        `,
-        [commentsIds, ParentType.comment],
-      );
+    const comments = (await commentsQueryBuilder
+      .clone()
+      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndMapOne(
+        'comment.like',
+        'Likes',
+        'like',
+        'like.parentId = comment.id AND like.parentType = :parentType AND like.userId = :userId',
+        { parentType: ParentType.comment, userId },
+      )
+      .getMany()) as EnrichedComment[];
+
+    const commentsLikesDislikes = await commentsQueryBuilder
+      .clone()
+      .select(
+        `COALESCE(SUM(CASE WHEN like.status = :like THEN 1 ELSE 0 END)::int, 0)`,
+        'likesCount',
+      )
+      .addSelect(
+        `COALESCE(SUM(CASE WHEN like.status = :dislike THEN 1 ELSE 0 END)::int, 0)`,
+        'dislikesCount',
+      )
+      .leftJoin(
+        'Likes',
+        'like',
+        'like.parentId = comment.id AND like.parentType = :parentType',
+        {
+          parentType: ParentType.comment,
+        },
+      )
+      .groupBy('comment.id')
+      .setParameters({
+        like: LikeStatus.Like,
+        dislike: LikeStatus.Dislike,
+      })
+      .getRawMany<CommentLikesDislikesInfo>();
 
     return PaginatedViewDto.mapToView({
       items: comments.map((comment, idx) =>
-        CommentViewDto.mapToView({ ...comment, ...commentLikesDislikes[idx] }),
+        CommentViewDto.mapToView({
+          content: comment.content,
+          createdAt: comment.createdAt,
+          id: comment.id,
+          myStatus: comment.like?.status || LikeStatus.None,
+          userId: comment.user.id,
+          userLogin: comment.user.login,
+          ...commentsLikesDislikes[idx],
+        }),
       ),
       page: query.pageNumber,
       size: query.pageSize,
@@ -99,80 +107,69 @@ export class CommentsQueryRepository {
     commentId: number,
     userId: number | null,
   ): Promise<CommentViewDto> {
-    const comment: DBCommentWithLoginAndMyStatus | null =
-      (
-        await this.dataSource.query(
-          `
-          SELECT 
-              c.*, 
-              u."login" AS "userLogin", 
-              COALESCE(l."status", 'None') AS "myStatus"
-          FROM "Comments" AS c
-          LEFT JOIN "Users" AS u 
-              ON c."userId" = u.id
-          LEFT JOIN "Likes" AS l 
-              ON l."parentId" = c.id
-              AND l."parentType" = $3
-              AND l."userId" = $2
-          WHERE c.id = $1 
-              AND c."deletedAt" IS NULL;
-          `,
-          [commentId, userId, ParentType.comment],
-        )
-      )[0] ?? null;
+    const comment = (await this.commentsRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.user', 'user')
+      .leftJoinAndMapOne(
+        'comment.like',
+        'Likes',
+        'like',
+        'like.parentId = comment.id AND like.parentType = :parentType AND like.userId = :userId',
+        { parentType: ParentType.comment, userId },
+      )
+      .where('comment.id = :commentId', { commentId })
+      .getOne()) as EnrichedComment | null;
 
     if (!comment) {
       throw NotFoundDomainException.create('Comment not found');
     }
 
-    const [{ likesCount, dislikesCount }]: [CommentsLikesDislikesInfo] =
-      await this.dataSource.query(
-        `
-        SELECT
-            COALESCE(COUNT(*) FILTER (WHERE status = 'Like')::int, 0) AS "likesCount",
-            COALESCE(COUNT(*) FILTER (WHERE status = 'Dislike')::int, 0) AS "dislikesCount"
-        FROM "Likes"
-        WHERE "parentId" = $1
-            AND "parentType" = $2
-        `,
-        [commentId, ParentType.comment],
-      );
+    const { likesCount, dislikesCount } = (await this.likesRepository
+      .createQueryBuilder('like')
+      .select(
+        `COALESCE(SUM(CASE WHEN like.status = :like THEN 1 ELSE 0 END)::int, 0)`,
+        'likesCount',
+      )
+      .addSelect(
+        `COALESCE(SUM(CASE WHEN like.status = :dislike THEN 1 ELSE 0 END)::int, 0)`,
+        'dislikesCount',
+      )
+      .where('like.parentId = :parentId', { parentId: commentId })
+      .andWhere('like.parentType = :parentType', {
+        parentType: ParentType.comment,
+        like: LikeStatus.Like,
+        dislike: LikeStatus.Dislike,
+      })
+      .getRawOne<{ likesCount: number; dislikesCount: number }>())!;
 
     return CommentViewDto.mapToView({
-      ...comment,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      id: comment.id,
+      myStatus: comment.like?.status || LikeStatus.None,
+      userId: comment.user.id,
+      userLogin: comment.user.login,
       likesCount,
       dislikesCount,
     });
   }
 
-  async findCommentItemsByQueryParams(
+  async createCommentsQueryBuilderByQueryParams(
     query: GetCommentsQueryParams,
     postId: number,
-  ): Promise<DBComment[]> {
+  ): Promise<SelectQueryBuilder<Comment>> {
     const { sortBy, sortDirection, pageSize } = query;
 
-    return this.dataSource.query(
-      `
-      SELECT * FROM "Comments" as c
-      WHERE c."postId" = $1 AND c."deletedAt" IS NULL
-      ORDER BY c."${sortBy}" ${sortDirection}
-      LIMIT $2 OFFSET $3
-      `,
-      [postId, pageSize, query.calculateSkip()],
-    );
-  }
-
-  async getTotalCommentsCount(postId: number): Promise<number> {
-    const { count } = (
-      await this.dataSource.query(
-        `
-        SELECT COUNT(*)::int FROM "Comments" as c
-        WHERE c."postId" = $1 AND c."deletedAt" IS NULL;
-        `,
-        [postId],
+    const builder = this.commentsRepository
+      .createQueryBuilder('comment')
+      .where('comment.postId = :postId', { postId })
+      .orderBy(
+        `comment.${sortBy}`,
+        sortDirection.toUpperCase() as 'ASC' | 'DESC',
       )
-    )[0];
+      .offset(query.calculateSkip())
+      .limit(pageSize);
 
-    return count;
+    return builder;
   }
 }

@@ -20,8 +20,9 @@ export class CreateCommentUseCase
     // Check that post is exist
     await this.postsRepository.findPostByIdOrNotFoundFail(dto.postId);
 
-    const newCommentId = await this.commentsRepository.createComment(dto);
+    const newComment = this.commentsRepository.create(dto);
+    await this.commentsRepository.save(newComment);
 
-    return newCommentId;
+    return newComment.id;
   }
 }

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Post } from '../../../domain/post.entity';
-import { LikeStatus } from '../../../types';
+import { LikeStatus } from '../../../domain/like.entity';
 
 class MapViewPostData {
   id: Post['id'];

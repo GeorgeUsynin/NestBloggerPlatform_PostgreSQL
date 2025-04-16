@@ -38,7 +38,7 @@ import {
   CreateCommentCommand,
   UpdatePostLikeStatusCommand,
 } from '../application/use-cases';
-import { ParentType } from '../types';
+import { ParentType } from '../domain/like.entity';
 
 @Controller('posts')
 export class PostsController {
@@ -61,7 +61,6 @@ export class PostsController {
     return this.postsQueryRepository.getAllPosts(query, userId);
   }
 
-  // DONE
   @UseGuards(JwtOptionalAuthGuard)
   @Get(':id')
   @HttpCode(HttpStatus.OK)
@@ -75,7 +74,6 @@ export class PostsController {
     return this.postsQueryRepository.getByIdOrNotFoundFail(id, userId);
   }
 
-  // TO BE IMPLEMENTED
   @UseGuards(JwtOptionalAuthGuard)
   @Get(':postId/comments')
   @HttpCode(HttpStatus.OK)
@@ -94,7 +92,6 @@ export class PostsController {
     );
   }
 
-  // TO BE IMPLEMENTED
   @ApiBearerAuth()
   @UseGuards(JwtHeaderAuthGuard)
   @Post(':postId/comments')
@@ -119,7 +116,6 @@ export class PostsController {
     );
   }
 
-  // TO BE IMPLEMENTED
   @ApiBearerAuth()
   @UseGuards(JwtHeaderAuthGuard)
   @Put(':id/like-status')

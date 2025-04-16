@@ -22,7 +22,8 @@ export class UpdateCommentUseCase
       await this.commentsRepository.findCommentByIdOrNotFoundFail(commentId);
 
     if (comment.userId === userId) {
-      await this.commentsRepository.update(commentId, dto);
+      comment.content = dto.content;
+      await this.commentsRepository.save(comment);
     } else {
       throw ForbiddenDomainException.create(
         'You are not allowed to modify this comment',

@@ -1,43 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { CreateCommentDto } from '../domain/dto/create/comments.create-dto';
-import { DBComment } from './types';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { UpdateCommentDto } from '../domain/dto/update/comments.update-dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Comment } from '../domain/comment.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CommentsRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(Comment)
+    private commentsRepository: Repository<Comment>,
+  ) {}
 
-  async createComment(dto: CreateCommentDto): Promise<DBComment['id']> {
-    const { content, postId, userId } = dto;
-
-    const query = `
-        INSERT INTO "Comments"
-        ("userId", "postId", content)
-        VALUES ($1, $2, $3)
-        RETURNING id;
-        `;
-
-    const { id } = (
-      await this.dataSource.query(query, [userId, postId, content])
-    )[0];
-
-    return id;
+  create(dto: CreateCommentDto) {
+    return this.commentsRepository.create(dto);
   }
 
-  async findCommentByIdOrNotFoundFail(id: number): Promise<DBComment> {
-    const comment =
-      (
-        await this.dataSource.query(
-          `
-      SELECT * FROM "Comments"
-      WHERE id = $1 AND "deletedAt" IS NULL;
-      `,
-          [id],
-        )
-      )[0] ?? null;
+  async save(comment: Comment) {
+    return this.commentsRepository.save(comment);
+  }
+
+  async deleteAllComments() {
+    return this.commentsRepository.delete({});
+  }
+
+  async findCommentByIdOrNotFoundFail(id: number): Promise<Comment> {
+    const comment = await this.commentsRepository.findOneBy({ id });
 
     if (!comment) {
       throw NotFoundDomainException.create('Comment not found');
@@ -46,27 +34,7 @@ export class CommentsRepository {
     return comment;
   }
 
-  async deleteCommentById(commentId: number) {
-    return this.dataSource.query(
-      `
-      UPDATE "Comments"
-	    SET "deletedAt" = $1
-	    WHERE id = $2;
-      `,
-      [new Date(), commentId],
-    );
-  }
-
-  async update(commentId: number, dto: UpdateCommentDto) {
-    const { content } = dto;
-
-    return this.dataSource.query(
-      `
-      UPDATE "Comments"
-	    SET "content" = $1
-	    WHERE id = $2;
-      `,
-      [content, commentId],
-    );
+  async softDeleteCommentById(id: number) {
+    return this.commentsRepository.softDelete(id);
   }
 }

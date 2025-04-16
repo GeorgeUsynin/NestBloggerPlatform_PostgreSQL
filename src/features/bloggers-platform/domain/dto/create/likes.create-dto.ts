@@ -1,4 +1,4 @@
-import { ParentType } from '../../../types';
+import { ParentType } from '../../../domain/like.entity';
 import { LikeStatus } from '../../like.entity';
 
 export type CreateLikeDto = {

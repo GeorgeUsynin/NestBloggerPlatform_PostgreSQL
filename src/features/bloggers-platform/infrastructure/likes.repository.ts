@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { DBLike } from './types';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateLikeDto } from '../domain/dto/create/likes.create-dto';
-import { UpdateLikeDto } from '../domain/dto/update/likes.update-dto';
+import { Like } from '../domain/like.entity';
 
 type TParams = {
   parentId: number;
@@ -12,45 +11,25 @@ type TParams = {
 
 @Injectable()
 export class LikesRepository {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(Like) private likesRepository: Repository<Like>,
+  ) {}
 
-  async createLike(dto: CreateLikeDto) {
-    const { parentId, status, userId, parentType } = dto;
-
-    return this.dataSource.query(
-      `
-      INSERT INTO "Likes"
-      ("userId", "parentId", status, "parentType")
-      VALUES($1, $2, $3, $4)
-      `,
-      [userId, parentId, status, parentType],
-    );
+  create(dto: CreateLikeDto) {
+    return this.likesRepository.create(dto);
   }
 
-  async findLikeByParams(params: TParams): Promise<DBLike> {
+  async findLikeByParams(params: TParams): Promise<Like | null> {
     const { parentId, userId } = params;
 
-    return (
-      await this.dataSource.query(
-        `
-      SELECT * FROM "Likes"
-      WHERE "parentId" = $1 AND "userId" = $2;
-      `,
-        [parentId, userId],
-      )
-    )[0];
+    return this.likesRepository.findOneBy({ parentId, userId });
   }
 
-  async update(likeId: number, dto: UpdateLikeDto) {
-    const { likeStatus } = dto;
+  async deleteAllLikes() {
+    return this.likesRepository.delete({});
+  }
 
-    return this.dataSource.query(
-      `
-        UPDATE "Likes"
-        SET status = $1
-        WHERE id = $2
-        `,
-      [likeStatus, likeId],
-    );
+  async save(like: Like) {
+    return this.likesRepository.save(like);
   }
 }

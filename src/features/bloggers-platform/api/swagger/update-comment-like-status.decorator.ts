@@ -11,7 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { SwaggerErrorsMessagesViewDto } from '../../../../core/dto/swagger-errors-messages.view-dto';
 import { UpdateLikeInputDto } from '../dto/input-dto/update/likes.input-dto';
-import { LikeStatus } from '../../types';
+import { LikeStatus } from '../../domain/like.entity';
 
 export class SwaggerUpdateCommentLikeStatusInputDto
   implements UpdateLikeInputDto

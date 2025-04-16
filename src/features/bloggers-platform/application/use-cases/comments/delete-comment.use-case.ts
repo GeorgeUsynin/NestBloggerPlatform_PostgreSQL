@@ -20,7 +20,7 @@ export class DeleteCommentUseCase
       await this.commentsRepository.findCommentByIdOrNotFoundFail(commentId);
 
     if (comment.userId === userId) {
-      await this.commentsRepository.deleteCommentById(commentId);
+      await this.commentsRepository.softDeleteCommentById(commentId);
     } else {
       throw ForbiddenDomainException.create(
         'You are not allowed to modify this comment',

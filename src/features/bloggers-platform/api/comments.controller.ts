@@ -32,7 +32,7 @@ import {
   UpdateCommentCommand,
   UpdateCommentLikeStatusCommand,
 } from '../application/use-cases';
-import { ParentType } from '../types';
+import { ParentType } from '../domain/like.entity';
 
 @Controller('comments')
 export class CommentsController {

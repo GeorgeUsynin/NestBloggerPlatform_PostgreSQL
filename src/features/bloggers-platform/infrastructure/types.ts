@@ -1,4 +1,4 @@
-import { LikeStatus, ParentType } from '../types';
+import { LikeStatus, ParentType } from '../domain/like.entity';
 
 export class DBBlog {
   id: number;
