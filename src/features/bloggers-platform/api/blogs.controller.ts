@@ -27,7 +27,6 @@ export class BlogsController {
     private postsQueryRepository: PostsQueryRepository,
   ) {}
 
-  // DONE
   @Get()
   @HttpCode(HttpStatus.OK)
   @GetAllBlogsApi()
@@ -37,7 +36,6 @@ export class BlogsController {
     return this.blogsQueryRepository.getAllBlogs(query);
   }
 
-  // DONE
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @GetBlogApi()
@@ -47,7 +45,6 @@ export class BlogsController {
     return this.blogsQueryRepository.getByIdOrNotFoundFail(id);
   }
 
-  // DONE
   @UseGuards(JwtOptionalAuthGuard)
   @Get(':blogId/posts')
   @HttpCode(HttpStatus.OK)

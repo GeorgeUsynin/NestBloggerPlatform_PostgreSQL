@@ -46,9 +46,9 @@ export class CommentsQueryRepository {
     const commentsQueryBuilder =
       await this.createCommentsQueryBuilderByQueryParams(query, postId);
 
-    const totalCount = await commentsQueryBuilder.getCount();
+    const totalCountPromise = commentsQueryBuilder.getCount();
 
-    const comments = (await commentsQueryBuilder
+    const commentsPromise = commentsQueryBuilder
       .clone()
       .leftJoinAndSelect('comment.user', 'user')
       .leftJoinAndMapOne(
@@ -58,9 +58,9 @@ export class CommentsQueryRepository {
         'like.parentId = comment.id AND like.parentType = :parentType AND like.userId = :userId',
         { parentType: ParentType.comment, userId },
       )
-      .getMany()) as EnrichedComment[];
+      .getMany() as Promise<EnrichedComment[]>;
 
-    const commentsLikesDislikes = await commentsQueryBuilder
+    const commentsLikesDislikesPromise = commentsQueryBuilder
       .clone()
       .select(
         `COALESCE(SUM(CASE WHEN like.status = :like THEN 1 ELSE 0 END)::int, 0)`,
@@ -84,6 +84,12 @@ export class CommentsQueryRepository {
         dislike: LikeStatus.Dislike,
       })
       .getRawMany<CommentLikesDislikesInfo>();
+
+    const [totalCount, comments, commentsLikesDislikes] = await Promise.all([
+      totalCountPromise,
+      commentsPromise,
+      commentsLikesDislikesPromise,
+    ]);
 
     return PaginatedViewDto.mapToView({
       items: comments.map((comment, idx) =>

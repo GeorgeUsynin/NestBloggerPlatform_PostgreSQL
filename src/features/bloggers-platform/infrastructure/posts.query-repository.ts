@@ -7,7 +7,7 @@ import {
 import { GetPostsQueryParams } from '../api/dto/query-params-dto/get-posts-query-params.input-dto';
 import { Like, LikeStatus, ParentType } from '../domain/like.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { NotFoundDomainException } from '../../../core/exceptions/domain-exceptions';
 import { Post } from '../domain/post.entity';
 import { Blog } from '../domain/blog.entity';
@@ -15,10 +15,11 @@ import { Blog } from '../domain/blog.entity';
 export class EnrichedPost extends Post {
   like: Like | null;
 }
-// class PostsLikesDislikesInfo {
-//   likesCount: number;
-//   dislikesCount: number;
-// }
+
+class PostsLikesDislikesInfo {
+  likesCount: number;
+  dislikesCount: number;
+}
 
 @Injectable()
 export class PostsQueryRepository {
@@ -36,55 +37,66 @@ export class PostsQueryRepository {
     userId: number | null,
     blogId?: number,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const [posts, totalCount] =
-      await this.findPostItemsAndTotalCountByQueryParams(query, blogId);
+    const postsQueryBuilder = await this.createPostsQueryBuilderByQueryParams(
+      query,
+      blogId,
+    );
 
-    // const postsIds = items.map((item) => item.id);
+    const totalCountPromise = await postsQueryBuilder.getCount();
 
-    // const posts: DBPostWitMyStatus[] = await this.dataSource.query(
-    //   `
-    //     SELECT
-    //         p.*,
-    //         COALESCE(l."status", 'None') AS "myStatus"
-    //     FROM "Posts" as p
-    //     LEFT JOIN "Likes" AS l
-    //         ON l."parentId" = p."id"
-    //         AND l."parentType" = $3
-    //         AND l."userId" = $2
-    //     WHERE p.id = ANY($1)
-    //         AND p."deletedAt" IS NULL
-    //     ORDER BY array_position($1, p.id);
-    //     `,
-    //   [postsIds, userId, ParentType.post],
-    // );
+    const postsPromise = (await postsQueryBuilder
+      .clone()
+      .leftJoinAndMapOne(
+        'post.like',
+        'Likes',
+        'like',
+        'like.parentId = post.id AND like.parentType = :parentType AND like.userId = :userId',
+        { parentType: ParentType.post, userId },
+      )
+      .getMany()) as EnrichedPost[];
 
-    // const postLikesDislikes: PostsLikesDislikesInfo[] =
-    //   await this.dataSource.query(
-    //     `
-    //   SELECT
-    //       COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Like')::int, 0) AS "likesCount",
-    //       COALESCE(COUNT(l.*) FILTER (WHERE l.status = 'Dislike')::int, 0) AS "dislikesCount"
-    //   FROM UNNEST($1::int[]) AS p("id")  -- Разворачиваем список комментариев
-    //   LEFT JOIN "Likes" l
-    //   ON l."parentId" = p.id AND l."parentType" = $2
-    //   GROUP BY p.id
-    //   ORDER BY array_position($1, p.id);
-    //   `,
-    //     [postsIds, ParentType.post],
-    //   );
+    const postsLikesDislikesPromise = await postsQueryBuilder
+      .clone()
+      .select(
+        `COALESCE(SUM(CASE WHEN like.status = :like THEN 1 ELSE 0 END)::int, 0)`,
+        'likesCount',
+      )
+      .addSelect(
+        `COALESCE(SUM(CASE WHEN like.status = :dislike THEN 1 ELSE 0 END)::int, 0)`,
+        'dislikesCount',
+      )
+      .leftJoin(
+        'Likes',
+        'like',
+        'like.parentId = post.id AND like.parentType = :parentType',
+        {
+          parentType: ParentType.post,
+        },
+      )
+      .groupBy('post.id')
+      .setParameters({
+        like: LikeStatus.Like,
+        dislike: LikeStatus.Dislike,
+      })
+      .getRawMany<PostsLikesDislikesInfo>();
 
-    // const newestLikes: NewestLikesDto[][] = await Promise.all(
-    //   postsIds.map(this.getNewestLikes.bind(this)),
-    // );
+    const [totalCount, posts, postsLikesDislikes] = await Promise.all([
+      totalCountPromise,
+      postsPromise,
+      postsLikesDislikesPromise,
+    ]);
+
+    const newestLikes: NewestLikesDto[][] = await Promise.all(
+      posts.map((post) => post.id).map(this.getNewestLikes.bind(this)),
+    );
 
     return PaginatedViewDto.mapToView({
-      items: posts.map((post) =>
+      items: posts.map((post, idx) =>
         PostViewDto.mapToView({
           ...post,
-          myStatus: LikeStatus.None,
-          dislikesCount: 0,
-          likesCount: 0,
-          newestLikes: [],
+          ...postsLikesDislikes[idx],
+          myStatus: post.like?.status || LikeStatus.None,
+          newestLikes: newestLikes[idx],
         }),
       ),
       page: query.pageNumber,
@@ -156,10 +168,10 @@ export class PostsQueryRepository {
     });
   }
 
-  async findPostItemsAndTotalCountByQueryParams(
+  async createPostsQueryBuilderByQueryParams(
     query: GetPostsQueryParams,
     blogId?: number,
-  ): Promise<[Post[], number]> {
+  ): Promise<SelectQueryBuilder<Post>> {
     const { sortBy, sortDirection, pageSize } = query;
 
     const builder = this.postsRepository
@@ -172,7 +184,7 @@ export class PostsQueryRepository {
       builder.where('post."blogId" = :blogId', { blogId });
     }
 
-    return await builder.getManyAndCount();
+    return builder;
   }
 
   private async getNewestLikes(postId: number) {

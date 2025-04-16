@@ -58,7 +58,6 @@ export class BlogsSAController {
     private commandBus: CommandBus,
   ) {}
 
-  // DONE
   @Get()
   @HttpCode(HttpStatus.OK)
   @GetAllBlogsApi()
@@ -68,7 +67,6 @@ export class BlogsSAController {
     return this.blogsQueryRepository.getAllBlogs(query);
   }
 
-  // DONE
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @CreateBlogApi()
@@ -80,7 +78,6 @@ export class BlogsSAController {
     return this.blogsQueryRepository.getByIdOrNotFoundFail(blogId);
   }
 
-  // DONE
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UpdateBlogApi()
@@ -91,7 +88,6 @@ export class BlogsSAController {
     return this.commandBus.execute(new UpdateBlogCommand(id, payload));
   }
 
-  // DONE
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @DeleteBlogApi()
@@ -99,7 +95,6 @@ export class BlogsSAController {
     return this.commandBus.execute(new DeleteBlogCommand(id));
   }
 
-  // DONE
   @UseGuards(JwtOptionalAuthGuard)
   @Get(':blogId/posts')
   @HttpCode(HttpStatus.OK)
@@ -114,7 +109,6 @@ export class BlogsSAController {
     return this.postsQueryRepository.getAllPostsByBlogId(query, userId, blogId);
   }
 
-  // DONE
   @UseGuards(JwtOptionalAuthGuard)
   @Post(':blogId/posts')
   @HttpCode(HttpStatus.CREATED)
@@ -133,7 +127,6 @@ export class BlogsSAController {
     return this.postsQueryRepository.getByIdOrNotFoundFail(postId, userId);
   }
 
-  // DONE
   @UseGuards(JwtOptionalAuthGuard)
   @Put(':blogId/posts/:postId')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -148,7 +141,6 @@ export class BlogsSAController {
     );
   }
 
-  // DONE
   @UseGuards(JwtOptionalAuthGuard)
   @Delete(':blogId/posts/:postId')
   @HttpCode(HttpStatus.NO_CONTENT)
