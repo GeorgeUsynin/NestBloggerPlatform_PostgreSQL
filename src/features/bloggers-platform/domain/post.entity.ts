@@ -7,6 +7,7 @@ import {
   DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import {
   postContentConstraints,
@@ -31,6 +32,7 @@ export class Post {
   @Column({ type: 'varchar' })
   blogName: string;
 
+  @Index()
   @Column({ type: 'integer' })
   blogId: number;
 

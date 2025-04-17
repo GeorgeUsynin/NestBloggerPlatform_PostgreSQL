@@ -7,10 +7,12 @@ import {
   DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { commentContentConstraints } from '../api/dto/constraints';
 import { User } from '../../user-accounts/domain/user.entity';
 import { Post } from './post.entity';
+
 @Entity({ name: 'Comments' })
 export class Comment {
   @PrimaryGeneratedColumn()
@@ -19,6 +21,7 @@ export class Comment {
   @Column({ type: 'integer' })
   userId: number;
 
+  @Index()
   @Column({ type: 'integer' })
   postId: number;
 

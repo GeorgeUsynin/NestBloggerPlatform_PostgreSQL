@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../user-accounts/domain/user.entity';
 
@@ -21,6 +22,7 @@ export enum ParentType {
 }
 
 @Entity({ name: 'Likes' })
+@Index(['parentId', 'parentType'])
 export class Like {
   @PrimaryGeneratedColumn()
   id: number;
