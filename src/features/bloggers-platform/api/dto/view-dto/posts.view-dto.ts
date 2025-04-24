@@ -49,7 +49,7 @@ class ExtendedLikesInfoDto {
 }
 
 export class PostViewDto {
-  @ApiProperty({ type: Number })
+  @ApiProperty({ type: String })
   id: string;
 
   @ApiProperty({ type: String })

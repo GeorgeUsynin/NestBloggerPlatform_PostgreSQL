@@ -1959,6 +1959,317 @@ window.onload = function() {
             "Comments"
           ]
         }
+      },
+      "/sa/quiz/questions": {
+        "get": {
+          "operationId": "QuizQuestionsSAController_getAllQuizQuestions",
+          "parameters": [
+            {
+              "name": "pageNumber",
+              "required": false,
+              "in": "query",
+              "description": "pageNumber is number of portions that should be returned",
+              "schema": {
+                "minimum": 1,
+                "default": 1,
+                "type": "number"
+              }
+            },
+            {
+              "name": "pageSize",
+              "required": false,
+              "in": "query",
+              "description": "pageSize is portions size that should be returned",
+              "schema": {
+                "minimum": 1,
+                "default": 10,
+                "type": "number"
+              }
+            },
+            {
+              "name": "sortDirection",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": "desc",
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            {
+              "name": "sortBy",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": "createdAt",
+                "type": "string",
+                "enum": [
+                  "createdAt"
+                ]
+              }
+            },
+            {
+              "name": "publishedStatus",
+              "required": false,
+              "in": "query",
+              "schema": {
+                "default": "all",
+                "type": "string",
+                "enum": [
+                  "all",
+                  "published",
+                  "notPublished"
+                ]
+              }
+            },
+            {
+              "name": "bodySearchTerm",
+              "required": false,
+              "in": "query",
+              "description": "Search term for question body: Question body should contain this term in any position",
+              "schema": {
+                "nullable": true,
+                "default": null,
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/PaginatedViewDto"
+                      },
+                      {
+                        "properties": {
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/QuizQuestionViewDto"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Returns all questions with pagination and filtering",
+          "tags": [
+            "QuizQuestionsSA"
+          ]
+        },
+        "post": {
+          "operationId": "QuizQuestionsSAController_createQuizQuestion",
+          "parameters": [],
+          "requestBody": {
+            "required": false,
+            "description": "Data for constructing new Question entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwaggerCreateQuizQuestionInputDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Returns the newly created question",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/QuizQuestionViewDto"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "If the inputModel has incorrect values",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Create new question",
+          "tags": [
+            "QuizQuestionsSA"
+          ]
+        }
+      },
+      "/sa/quiz/questions/{id}": {
+        "put": {
+          "operationId": "QuizQuestionsSAController_updateQuizQuestionById",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Question id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": false,
+            "description": "Data for updating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwaggerUpdateQuizQuestionInputDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "400": {
+              "description": "If the inputModel has incorrect values",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Update existing Question by id with InputModel",
+          "tags": [
+            "QuizQuestionsSA"
+          ]
+        },
+        "delete": {
+          "operationId": "QuizQuestionsSAController_deleteBlogById",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Question id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Delete quiz question specified by id",
+          "tags": [
+            "QuizQuestionsSA"
+          ]
+        }
+      },
+      "/sa/quiz/questions/{id}/publish": {
+        "put": {
+          "operationId": "QuizQuestionsSAController_updatePublishQuizQuestionById",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "Question id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": false,
+            "description": "Data for updating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwaggerUpdatePublishQuizQuestionsInputDto"
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "400": {
+              "description": "If the inputModel has incorrect values",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SwaggerErrorsMessagesViewDto"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Publish/unpublish question",
+          "tags": [
+            "QuizQuestionsSA"
+          ]
+        }
       }
     },
     "info": {
@@ -2234,7 +2545,7 @@ window.onload = function() {
           "type": "object",
           "properties": {
             "id": {
-              "type": "number"
+              "type": "string"
             },
             "description": {
               "type": "string"
@@ -2325,7 +2636,7 @@ window.onload = function() {
           "type": "object",
           "properties": {
             "id": {
-              "type": "number"
+              "type": "string"
             },
             "title": {
               "type": "string"
@@ -2579,6 +2890,102 @@ window.onload = function() {
           },
           "required": [
             "likeStatus"
+          ]
+        },
+        "QuizQuestionViewDto": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string",
+              "description": "Text of question, for example: How many continents are there?"
+            },
+            "correctAnswers": {
+              "description": "All variants of possible correct answers for current questions Examples: ['6', 'six', 'шесть', 'дофига'] In Postgres save this data in JSON column",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "published": {
+              "type": "boolean",
+              "default": "false",
+              "description": "If question is completed and can be used in the Quiz game"
+            },
+            "createdAt": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "updatedAt": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "body",
+            "correctAnswers",
+            "published",
+            "createdAt",
+            "updatedAt"
+          ]
+        },
+        "SwaggerCreateQuizQuestionInputDto": {
+          "type": "object",
+          "properties": {
+            "body": {
+              "type": "string",
+              "maxLength": 500,
+              "minLength": 10
+            },
+            "correctAnswers": {
+              "minItems": 1,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "body",
+            "correctAnswers"
+          ]
+        },
+        "SwaggerUpdateQuizQuestionInputDto": {
+          "type": "object",
+          "properties": {
+            "body": {
+              "type": "string",
+              "maxLength": 500,
+              "minLength": 10
+            },
+            "correctAnswers": {
+              "minItems": 1,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "body",
+            "correctAnswers"
+          ]
+        },
+        "SwaggerUpdatePublishQuizQuestionsInputDto": {
+          "type": "object",
+          "properties": {
+            "published": {
+              "type": "boolean",
+              "description": "True if question is completed and can be used in the Quiz game"
+            }
+          },
+          "required": [
+            "published"
           ]
         }
       }

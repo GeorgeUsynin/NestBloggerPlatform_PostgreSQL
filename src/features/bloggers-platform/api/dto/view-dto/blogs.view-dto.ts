@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Blog } from '../../../domain/blog.entity';
 
 export class BlogViewDto {
-  @ApiProperty({ type: Number })
+  @ApiProperty({ type: String })
   id: string;
 
   @ApiProperty({ type: String })

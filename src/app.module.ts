@@ -15,6 +15,7 @@ import { CoreConfig } from './core/config';
 import { join } from 'path';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CqrsModule } from '@nestjs/cqrs';
+import { QuizGameModule } from './features/quiz-game/quiz-game.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { CqrsModule } from '@nestjs/cqrs';
     UsersAccountsModule,
     BloggersPlatformModule,
     NotificationsModule,
+    QuizGameModule,
     configModule,
   ],
   controllers: [AppController],
