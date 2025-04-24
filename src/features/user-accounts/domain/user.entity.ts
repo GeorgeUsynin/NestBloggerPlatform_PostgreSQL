@@ -12,6 +12,7 @@ import { EmailConfirmation } from './emailConfirmation.entity';
 import { PasswordRecovery } from './passwordRecovery.entity';
 import { AuthDeviceSession } from './authDeviceSession.entity';
 import { loginConstraints, passwordConstraints } from '../api/dto/constraints';
+import { PlayerProgress } from '../../quiz-game/domain/playerProgress.entity';
 
 @Entity({ name: 'Users' })
 export class User {
@@ -54,4 +55,10 @@ export class User {
     (authDeviceSession) => authDeviceSession.user,
   )
   authDeviceSession: AuthDeviceSession[];
+
+  @OneToMany(
+    () => PlayerProgress,
+    (playerProgress) => playerProgress.playerAccount,
+  )
+  playerProgress: PlayerProgress[];
 }
