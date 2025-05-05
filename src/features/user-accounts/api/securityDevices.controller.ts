@@ -22,7 +22,7 @@ import {
 } from './swagger';
 import { TerminateAuthDeviceSessionByIdApi } from './swagger/securityDevices/delete-auth-session-device-by-id.decorato';
 
-@Controller('security')
+@Controller('security/devices')
 export class SecurityDevicesController {
   constructor(
     private authDeviceSessionQueryRepository: AuthDeviceSessionQueryRepository,
@@ -31,7 +31,7 @@ export class SecurityDevicesController {
 
   @ApiBearerAuth()
   @UseGuards(JwtCookieAuthGuard)
-  @Get('devices')
+  @Get()
   @HttpCode(HttpStatus.OK)
   @GetAllAuthSessionDevicesApi()
   async getAllAuthDeviceSessions(
@@ -44,7 +44,7 @@ export class SecurityDevicesController {
 
   @ApiBearerAuth()
   @UseGuards(JwtCookieAuthGuard)
-  @Delete('devices')
+  @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
   @TerminateAuthDeviceSessionExceptCurrentApi()
   async terminateAllAuthDeviceSessionsExceptCurrent(
@@ -60,7 +60,7 @@ export class SecurityDevicesController {
 
   @ApiBearerAuth()
   @UseGuards(JwtCookieAuthGuard)
-  @Delete('devices/:id')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @TerminateAuthDeviceSessionByIdApi()
   async terminateAuthDeviceSessionById(

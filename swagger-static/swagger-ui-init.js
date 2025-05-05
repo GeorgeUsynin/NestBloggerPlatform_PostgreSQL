@@ -73,7 +73,16 @@ window.onload = function() {
       "/auth/login": {
         "post": {
           "operationId": "AuthController_login",
-          "parameters": [],
+          "parameters": [
+            {
+              "name": "user-agent",
+              "required": true,
+              "in": "header",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "requestBody": {
             "required": false,
             "content": {
@@ -361,80 +370,6 @@ window.onload = function() {
           ]
         }
       },
-      "/sa/users/{id}": {
-        "get": {
-          "operationId": "UsersController_getById",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "description": "User id",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Success",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/UserViewDto"
-                  }
-                }
-              }
-            },
-            "404": {
-              "description": "Not Found"
-            }
-          },
-          "security": [
-            {
-              "basic": []
-            }
-          ],
-          "summary": "Returns user by id",
-          "tags": [
-            "Users"
-          ]
-        },
-        "delete": {
-          "operationId": "UsersController_deleteUser",
-          "parameters": [
-            {
-              "name": "id",
-              "required": true,
-              "in": "path",
-              "description": "User id",
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "204": {
-              "description": "No Content"
-            },
-            "401": {
-              "description": "Unauthorized"
-            },
-            "404": {
-              "description": "If specified user is not exists"
-            }
-          },
-          "security": [
-            {
-              "basic": []
-            }
-          ],
-          "summary": "Delete user specified by id",
-          "tags": [
-            "Users"
-          ]
-        }
-      },
       "/sa/users": {
         "get": {
           "operationId": "UsersController_getAllUsers",
@@ -595,6 +530,80 @@ window.onload = function() {
             }
           ],
           "summary": "Add new user to the system",
+          "tags": [
+            "Users"
+          ]
+        }
+      },
+      "/sa/users/{id}": {
+        "get": {
+          "operationId": "UsersController_getById",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "User id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UserViewDto"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Not Found"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Returns user by id",
+          "tags": [
+            "Users"
+          ]
+        },
+        "delete": {
+          "operationId": "UsersController_deleteUser",
+          "parameters": [
+            {
+              "name": "id",
+              "required": true,
+              "in": "path",
+              "description": "User id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "No Content"
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "404": {
+              "description": "If specified user is not exists"
+            }
+          },
+          "security": [
+            {
+              "basic": []
+            }
+          ],
+          "summary": "Delete user specified by id",
           "tags": [
             "Users"
           ]
@@ -2466,30 +2475,6 @@ window.onload = function() {
             "recoveryCode"
           ]
         },
-        "UserViewDto": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "login": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string"
-            },
-            "createdAt": {
-              "format": "date-time",
-              "type": "string"
-            }
-          },
-          "required": [
-            "id",
-            "login",
-            "email",
-            "createdAt"
-          ]
-        },
         "PaginatedViewDto": {
           "type": "object",
           "properties": {
@@ -2515,6 +2500,30 @@ window.onload = function() {
             "page",
             "pageSize",
             "items"
+          ]
+        },
+        "UserViewDto": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "login": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "createdAt": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "login",
+            "email",
+            "createdAt"
           ]
         },
         "AuthDeviceSessionViewDto": {

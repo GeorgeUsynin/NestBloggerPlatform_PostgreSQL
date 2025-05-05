@@ -2,14 +2,15 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
+  Ip,
   Post,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { CommandBus } from '@nestjs/cqrs';
 import { ExtractUserFromRequest } from '../guards/decorators/params/ExtractUserFromRequest.decorator';
 import { UserContextDto } from '../guards/dto/user-context.dto';
@@ -75,13 +76,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @LoginApi()
   async login(
-    @Req() request: Request,
+    @Ip() clientIp: string,
+    @Headers('user-agent') userAgent: string,
     @Res({ passthrough: true }) response: Response,
     @ExtractUserFromRequest() user: UserContextDto,
   ): Promise<LoginSuccessViewDto> {
-    const userAgent = request.header('user-agent');
-    const clientIp = request.ip || '';
-
     const { accessToken, refreshToken } = await this.commandBus.execute<
       LoginCommand,
       LoginUseCaseResponse

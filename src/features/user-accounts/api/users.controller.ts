@@ -40,14 +40,6 @@ export class UsersController {
     private commandBus: CommandBus,
   ) {}
 
-  @Public()
-  @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  @GetUserApi()
-  async getById(@Param('id', ParseIntPipe) id: number): Promise<UserViewDto> {
-    return this.usersQueryRepository.getByIdOrNotFoundFail(id);
-  }
-
   @Get()
   @HttpCode(HttpStatus.OK)
   @GetAllUsersApi()
@@ -55,6 +47,14 @@ export class UsersController {
     @Query() query: GetUsersQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
     return this.usersQueryRepository.getAllUsers(query);
+  }
+
+  @Public()
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @GetUserApi()
+  async getById(@Param('id', ParseIntPipe) id: number): Promise<UserViewDto> {
+    return this.usersQueryRepository.getByIdOrNotFoundFail(id);
   }
 
   @Post()

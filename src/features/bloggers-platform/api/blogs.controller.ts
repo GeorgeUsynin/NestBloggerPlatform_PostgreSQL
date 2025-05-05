@@ -36,6 +36,8 @@ export class BlogsController {
     return this.blogsQueryRepository.getAllBlogs(query);
   }
 
+  // Routes with parameters should be declared after any static paths.
+  // This prevents the parameterized paths from intercepting traffic destined for the static paths.
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @GetBlogApi()
